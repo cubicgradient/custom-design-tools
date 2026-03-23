@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persian Mystical Valley Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300;400;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Martian Mono', monospace !important;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            padding: 20px;
+        }
+        
+        #canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid #222;
+        }
+        
+        #canvas-container canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        #gui-panel {
+            background: #111;
+            width: 420px;
+            height: 100%;
+            overflow: hidden;
+            border: 1px solid #222;
+            margin-left: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #gui-panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            padding-bottom: 10px;
+        }
+        
+        #gui-panel-content::-webkit-scrollbar {
+            display: none;
+        }
+        
+        #gui-panel-footer {
+            background: #111;
+            border-top: 1px solid #222;
+            padding: 20px 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .gui-main-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .gui-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #222;
+        }
+        
+        .section-title {
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #fff;
+        }
+        
+        .control-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 14px;
+        }
+        
+        .control-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 300;
+        }
+        
+        .slider-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .gui-slider {
+            width: 100%;
+            accent-color: #fff;
+            cursor: pointer;
+        }
+        
+        .slider-value {
+            color: #fff;
+            font-weight: 700;
+            font-size: 10px;
+            min-width: 30px;
+            text-align: right;
+        }
+        
+        .gui-input, .gui-select {
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            outline: none;
+        }
+        
+        .gui-select {
+            cursor: pointer;
+        }
+        
+        .color-wheel {
+            width: 100%;
+            height: 35px;
+            border: 1px solid #333;
+            cursor: pointer;
+            background: #1a1a1a;
+            border-radius: 6px;
+        }
+        
+        .button-grid {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .export-button {
+            width: 100%;
+            flex: 1;
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 0;
+            transition: background 0.2s;
+            height: auto;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .export-button:hover {
+            background: #e0e0e0;
+        }
+        
+        .export-button:hover {
+            background: #e0e0e0;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .gui-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 1px solid #333;
+            border-radius: 2px;
+            background: #1a1a1a;
+            cursor: pointer;
+            appearance: none;
+            margin-right: 8px;
+        }
+        
+        .gui-checkbox:checked {
+            background: #fff;
+            position: relative;
+        }
+        
+        .gui-checkbox:checked::after {
+            content: '✓';
+            color: #000;
+            font-size: 12px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .checkbox-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            font-weight: 700;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="gui-panel">
+        <div id="gui-panel-content"></div>
+        <div id="gui-panel-footer"></div>
+    </div>
+    <script>
+        let particles=[],colors=['#b55e2f','#3e4b81','#a68d51'],bgColor,settings={motionDirection:'inward',oscillation:false,speed:.4,angleStep:.1,numParticles:800,particleSize:3,trailAlpha:10,pulseHeartbeat:false,mirrorAngle:false,symmetryEdges:8,spawnFromEdge:false,spawnRadiusMin:50,spawnRadiusMax:350,geometryType:'circle',polygonSides:8,starPoints:8,enableBouncing:true,bounceInnerRadius:10,bounceOuterRadius:300,spiralMirroring:false,colorPalette:['#b55e2f','#3e4b81','#a68d51'],customColor1:'#b55e2f',customColor2:'#3e4b81',customColor3:'#a68d51',exportScale:10,isPlaying:true,twistAmount:0,twistFrequency:10};
+        
+        function setup(){
+            let c=createCanvas(850,950);
+            c.parent('canvas-container');
+            angleMode(DEGREES);
+            bgColor=color('#e1d5ba');
+            background(bgColor);
+            noStroke();
+            colors=settings.colorPalette;
+            createGui();
+            initParticles();
+        }
+        
+        function createGui(){
+            const panel=document.getElementById('gui-panel-content');
+            const footer=document.getElementById('gui-panel-footer');
+            panel.innerHTML='';
+            footer.innerHTML='';
+            
+            const mainGrid=document.createElement('div');
+            mainGrid.className='gui-main-grid';
+            panel.appendChild(mainGrid);
+            
+            // Panel 1: Ink Palette
+            const colorSection=createSection('Ink Palette',mainGrid);
+            addColorPicker(colorSection,'Color 1','color1',settings.customColor1);
+            addColorPicker(colorSection,'Color 2','color2',settings.customColor2);
+            addColorPicker(colorSection,'Color 3','color3',settings.customColor3);
+            
+            // Panel 2: Path Geometry
+            const geomSection=createSection('Path Geometry (Universal Schema)',mainGrid);
+            addSelect(geomSection,'Movement Pattern','geometryType',[
+                {value:'circle',label:'Circular (Traditional)',selected:true},
+                {value:'polygon',label:'Polygon Path'},
+                {value:'star',label:'Star Pattern'},
+                {value:'octagon',label:'Octagon (Khatam)'},
+                {value:'hexagon',label:'Hexagon'},
+                {value:'square',label:'Square (Chahar Bagh)'},
+                {value:'triangle',label:'Triangle'}
+            ],true);
+            const geomGrid=document.createElement('div');
+            geomGrid.className='control-grid';
+            geomGrid.style.marginTop='12px';
+            geomSection.appendChild(geomGrid);
+            addSlider(geomGrid,'polygonSides','Polygon Sides',3,16,1);
+            addSlider(geomGrid,'starPoints','Star Points',5,16,1);
+            
+            // Panel 3: Emergence (Births)
+            const spawnSection=createSection('Emergence (Births)',mainGrid);
+            const spawnGrid=document.createElement('div');
+            spawnGrid.className='control-grid';
+            spawnSection.appendChild(spawnGrid);
+            addCheckbox(spawnGrid,'spawnFromEdge','Emerge from Perimeter',true);
+            addSlider(spawnGrid,'spawnRadiusMin','Essence Scale',10,200,10);
+            addSlider(spawnGrid,'spawnRadiusMax','Horizon Scale',100,500,10);
+            
+            // Panel 4: Insight Dynamics
+            const coreSection=createSection('Insight Dynamics',mainGrid);
+            const coreGrid=document.createElement('div');
+            coreGrid.className='control-grid';
+            coreSection.appendChild(coreGrid);
+            addSelect(coreGrid,'Path Direction','motionDirection',[
+                {value:'inward',label:'inward',selected:true},
+                {value:'outward',label:'outward'}
+            ]);
+            addSlider(coreGrid,'speed','Pace',0,2,.01);
+            addSlider(coreGrid,'numParticles','Insight Count',200,1500,50);
+            addSlider(coreGrid,'particleSize','Insight Weight',1,8,.5);
+            addSlider(coreGrid,'symmetryEdges','Echo Count',1,16,1);
+            addSlider(coreGrid,'trailAlpha','Persistence',5,50,1);
+            addSlider(coreGrid,'angleStep','Unveiling Rate',0,.5,.01);
+            addSlider(coreGrid,'twistAmount','Twist',0,30,1);
+            addCheckbox(coreGrid,'mirrorAngle','Dual Insights');
+            addCheckbox(coreGrid,'pulseHeartbeat','Insight Weight Oscillation');
+            addCheckbox(coreGrid,'oscillation','Radius Oscillation');
+            
+            // Panel 5: Bounds & Return
+            const bounceSection=createSection('Bounds & Return',mainGrid);
+            const bounceGrid=document.createElement('div');
+            bounceGrid.className='control-grid';
+            bounceSection.appendChild(bounceGrid);
+            addCheckbox(bounceGrid,'enableBouncing','Return at Bounds');
+            addSlider(bounceGrid,'bounceInnerRadius','Inner Limit (Bound)',5,100,1);
+            addSlider(bounceGrid,'bounceOuterRadius','Outer Limit (Bound)',100,500,10);
+            
+            // FOOTER - Export Controls
+            const exportTopRow=document.createElement('div');
+            exportTopRow.className='button-grid';
+            footer.appendChild(exportTopRow);
+            
+            const resetBtn=document.createElement('button');
+            resetBtn.className='export-button';
+            resetBtn.textContent='Reset Particles';
+            resetBtn.onclick=initParticles;
+            exportTopRow.appendChild(resetBtn);
+            
+            const playBtn=document.createElement('button');
+            playBtn.className='export-button';
+            playBtn.innerHTML='||';
+            playBtn.id='playButton';
+            playBtn.style.fontWeight='800';
+            playBtn.style.fontSize='16px';
+            playBtn.onclick=()=>{settings.isPlaying=!settings.isPlaying;playBtn.innerHTML=settings.isPlaying?'||':'▶'};
+            exportTopRow.appendChild(playBtn);
+            
+            const exportBottomRow=document.createElement('div');
+            exportBottomRow.style.display='flex';
+            footer.appendChild(exportBottomRow);
+            
+            const saveBtn=document.createElement('button');
+            saveBtn.className='export-button';
+            saveBtn.textContent='Save High-res';
+            saveBtn.onclick=saveCanvasImage;
+            exportBottomRow.appendChild(saveBtn);
+            
+            setupEventListeners();
+        }
+        
+        function createSection(t,p){const s=document.createElement('div');s.className='gui-section';const ti=document.createElement('div');ti.className='section-title';ti.textContent=t;s.appendChild(ti);p.appendChild(s);return s}
+        function addSlider(p,k,l,mi,ma,st){const g=document.createElement('div');g.className='control-group';const le=document.createElement('div');le.className='control-label';le.textContent=l;g.appendChild(le);const sc=document.createElement('div');sc.className='slider-container';const s=document.createElement('input');s.type='range';s.className='gui-slider';s.min=mi;s.max=ma;s.step=st;s.value=settings[k];const v=document.createElement('div');v.className='slider-value';v.textContent=settings[k].toFixed(st<1?2:0);s.oninput=e=>{const val=parseFloat(e.target.value);settings[k]=val;v.textContent=val.toFixed(st<1?2:0);if(k==='numParticles')initParticles()};sc.appendChild(s);sc.appendChild(v);g.appendChild(sc);p.appendChild(g)}
+        function addCheckbox(p,k,l,f=false){const g=document.createElement('div');g.className=f?'control-group full-width':'control-group';const c=document.createElement('div');c.className='checkbox-container';const cb=document.createElement('input');cb.type='checkbox';cb.className='gui-checkbox';cb.checked=settings[k];cb.id=k;const la=document.createElement('label');la.className='checkbox-label';la.textContent=l;la.htmlFor=k;cb.onchange=e=>settings[k]=e.target.checked;c.appendChild(cb);c.appendChild(la);g.appendChild(c);p.appendChild(g)}
+        function addSelect(p,l,k,o,f=false){const g=document.createElement('div');g.className=f?'control-group full-width':'control-group';const le=document.createElement('div');le.className='control-label';le.textContent=l;g.appendChild(le);const s=document.createElement('select');s.className='gui-select';s.id=k;o.forEach(op=>{const oe=document.createElement('option');oe.value=op.value;oe.textContent=op.label;if(op.selected||settings[k]===op.value)oe.selected=true;s.appendChild(oe)});s.onchange=e=>{settings[k]=e.target.value;if(k==='exportScale')settings[k]=parseInt(e.target.value)};g.appendChild(s);p.appendChild(g)}
+        function addColorPicker(p,l,i,v){const g=document.createElement('div');g.className='control-group';const le=document.createElement('div');le.className='control-label';le.textContent=l;g.appendChild(le);const cp=document.createElement('input');cp.type='color';cp.className='color-wheel';cp.value=v;cp.id=i;cp.oninput=e=>{const ci=i.replace('color','');settings['customColor'+ci]=e.target.value;settings.colorPalette=[settings.customColor1,settings.customColor2,settings.customColor3];colors=settings.colorPalette};g.appendChild(cp);p.appendChild(g)}
+        function setupEventListeners(){const gs=document.getElementById('geometryType');if(gs)gs.onchange=e=>{settings.geometryType=e.target.value;if(e.target.value==='octagon')settings.polygonSides=8;else if(e.target.value==='hexagon')settings.polygonSides=6;else if(e.target.value==='square')settings.polygonSides=4;else if(e.target.value==='triangle')settings.polygonSides=3}}
+        function getGeometricPosition(a,r){switch(settings.geometryType){case'circle':return{x:r*cos(a),y:r*sin(a)};case'polygon':case'octagon':case'hexagon':case'square':case'triangle':return getPolygonPosition(a,r,settings.polygonSides);case'star':return getStarPosition(a,r,settings.starPoints);default:return{x:r*cos(a),y:r*sin(a)}}}
+        function getPolygonPosition(a,r,s){const ap=360/s,na=((a%360)+360)%360,si=Math.floor(na/ap),ai=na%ap,pr=ai/ap,cv=si*ap,nv=((si+1)%s)*ap,x1=r*cos(cv),y1=r*sin(cv),x2=r*cos(nv),y2=r*sin(nv);return{x:lerp(x1,x2,pr),y:lerp(y1,y2,pr)}}
+        function getStarPosition(a,r,p){const ap=360/(p*2),na=((a%360)+360)%360,pi=Math.floor(na/ap),ai=na%ap,pr=ai/ap,io=pi%2===0,cr=io?r:r*.5,nr=io?r*.5:r,ca=pi*ap,ne=((pi+1)%(p*2))*ap,x1=cr*cos(ca),y1=cr*sin(ca),x2=nr*cos(ne),y2=nr*sin(ne);return{x:lerp(x1,x2,pr),y:lerp(y1,y2,pr)}}
+        function initParticles(){particles=[];for(let i=0;i<settings.numParticles;i++){let a=i*137.5,sd=1;if(settings.spiralMirroring)sd=i%2===0?1:-1;let ad=1;if(settings.mirrorAngle)ad=i%2===0?1:-1;let ra;if(settings.spawnFromEdge){const cr=max(width,height)*.7;ra=random(cr,cr+100)}else ra=random(settings.spawnRadiusMin,settings.spawnRadiusMax);let co=color(random(colors));co.setAlpha(random(150,220));particles.push({angle:a,radius:ra,originalRadius:ra,speed:settings.speed,direction:settings.motionDirection==='inward'?-1:1,spiralDirection:sd,angleDirection:ad,col:co,phase:random(TWO_PI)})}}
+        function draw(){if(!settings.isPlaying)return;let bg=color(bgColor);bg.setAlpha(settings.trailAlpha);background(bg);translate(width/2,height/2);for(let p of particles){let tw=settings.twistAmount!==0?sin(p.radius/settings.twistFrequency)*settings.twistAmount:0,sy=360/settings.symmetryEdges,ps=settings.particleSize;if(settings.pulseHeartbeat)ps+=sin(frameCount*.15)*(settings.particleSize*.8);for(let s=0;s<settings.symmetryEdges;s++){let ao=p.angle+tw+s*sy,po=getGeometricPosition(ao,p.radius);fill(p.col);ellipse(po.x,po.y,ps,ps)}p.radius+=settings.speed*p.direction;if(settings.spiralMirroring)p.angle+=settings.angleStep*p.spiralDirection;else if(settings.mirrorAngle)p.angle+=settings.angleStep*p.angleDirection;else p.angle+=settings.angleStep;if(settings.oscillation){if(p.radius<=settings.spawnRadiusMin)p.direction=1;if(p.radius>=settings.spawnRadiusMax)p.direction=-1}else if(settings.enableBouncing){if(p.radius<=settings.bounceInnerRadius)p.direction=1;if(p.radius>=settings.bounceOuterRadius)p.direction=-1;if(p.radius<settings.bounceInnerRadius-10||p.radius>settings.bounceOuterRadius+50){p.radius=random(settings.spawnRadiusMin,settings.spawnRadiusMax);p.angle=random(360);p.col=color(random(colors));p.col.setAlpha(random(150,220));p.phase=random(TWO_PI);p.direction=settings.motionDirection==='inward'?-1:1;if(settings.spiralMirroring)p.spiralDirection*=-1}}else{let sr=false,nr;if(settings.spawnFromEdge){const cr=max(width,height)*.7;if(settings.motionDirection==='inward'){if(p.radius<10){sr=true;nr=random(cr,cr+100)}}else if(p.radius>cr+150){sr=true;nr=random(10,50)}}else if(p.radius<10||p.radius>width*.6+100){sr=true;nr=random(settings.spawnRadiusMin,settings.spawnRadiusMax)}if(sr){p.radius=nr;p.angle=random(360);p.col=color(random(colors));p.col.setAlpha(random(150,220));p.phase=random(TWO_PI);p.direction=settings.motionDirection==='inward'?-1:1;if(settings.spiralMirroring)p.spiralDirection*=-1}}}}
+        function saveCanvasImage(){const sc=settings.exportScale,ew=850*sc,eh=950*sc;let hg=createGraphics(ew,eh);hg.angleMode(DEGREES);hg.noStroke();hg.background(color('#e1d5ba'));const tf=30,of=frameCount;for(let fr=tf-1;fr>=0;fr--){if(fr<tf-1){let tb=color('#e1d5ba');tb.setAlpha(settings.trailAlpha);hg.fill(tb);hg.rect(0,0,ew,eh)}let sf=of-fr;hg.push();hg.translate(ew/2,eh/2);for(let p of particles){let pr=p.radius-(settings.speed*p.direction*fr),pa=p.angle-(settings.angleStep*fr);if(settings.spiralMirroring)pa=p.angle-(settings.angleStep*p.spiralDirection*fr);else if(settings.mirrorAngle)pa=p.angle-(settings.angleStep*p.angleDirection*fr);let tw=settings.twistAmount!==0?sin(pr/settings.twistFrequency)*settings.twistAmount:0,sy=360/settings.symmetryEdges,psi=settings.particleSize*sc;if(settings.pulseHeartbeat)psi+=sin(sf*.15)*(settings.particleSize*.8*sc);let tc=color(p.col.toString());tc.setAlpha(map(fr,0,tf-1,255,80));for(let s=0;s<settings.symmetryEdges;s++){let ao=pa+tw+s*sy,po=getGeometricPosition(ao,pr);po.x*=sc;po.y*=sc;hg.fill(tc);hg.ellipse(po.x,po.y,psi,psi)}}hg.pop()}const li=document.createElement('a');li.download=`mystical_valley_${sc}x_trails.png`;li.href=hg.canvas.toDataURL('image/png');li.click();hg.remove()}
+        function keyPressed(){if(key==='s')saveCanvasImage();if(key===' '){settings.isPlaying=!settings.isPlaying;const pb=document.getElementById('playButton');if(pb)pb.innerHTML=settings.isPlaying?'||':'▶'}if(key==='g'){const t=['circle','polygon','star','octagon','hexagon','square','triangle'],cu=t.indexOf(settings.geometryType);settings.geometryType=t[(cu+1)%t.length];const gs=document.getElementById('geometryType');if(gs)gs.value=settings.geometryType}}
+    </script>
+</body>
+</html>

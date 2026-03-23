@@ -1,0 +1,684 @@
+<html lang="en-US">
+<head>
+  <title>A4 Chladni Plate Simulation</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script src="https://cdn.jsdelivr.net/npm/p5"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300;400;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Martian Mono', monospace !important;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            padding: 20px;
+        }
+        
+        #canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid #222;
+        }
+        
+        #canvas-container canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        #gui-panel {
+            background: #111;
+            width: 420px;
+            height: 100%;
+            overflow: hidden;
+            border: 1px solid #222;
+            margin-left: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #gui-panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            padding-bottom: 10px;
+        }
+        
+        #gui-panel-content::-webkit-scrollbar {
+            display: none;
+        }
+        
+        #gui-panel-footer {
+            background: #111;
+            border-top: 1px solid #222;
+            padding: 20px 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .gui-main-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .gui-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #222;
+        }
+        
+        .section-title {
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #fff;
+        }
+        
+        .control-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 14px;
+        }
+        
+        .control-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 300;
+        }
+        
+        .slider-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .gui-slider {
+            width: 100%;
+            accent-color: #fff;
+            cursor: pointer;
+        }
+        
+        .slider-value {
+            color: #fff;
+            font-weight: 700;
+            font-size: 10px;
+            min-width: 30px;
+            text-align: right;
+        }
+        
+        .gui-input, .gui-select {
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            outline: none;
+        }
+        
+        .gui-select {
+            cursor: pointer;
+        }
+        
+        .color-wheel {
+            width: 100%;
+            height: 35px;
+            border: 1px solid #333;
+            cursor: pointer;
+            background: #1a1a1a;
+            border-radius: 6px;
+        }
+        
+        .button-grid {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .export-button {
+            width: 100%;
+            flex: 1;
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 0;
+            transition: background 0.2s;
+            height: auto;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .export-button:hover {
+            background: #e0e0e0;
+        }
+        
+        .export-button:hover {
+            background: #e0e0e0;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .gui-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 1px solid #333;
+            border-radius: 2px;
+            background: #1a1a1a;
+            cursor: pointer;
+            appearance: none;
+            margin-right: 8px;
+        }
+        
+        .gui-checkbox:checked {
+            background: #fff;
+            position: relative;
+        }
+        
+        .gui-checkbox:checked::after {
+            content: '✓';
+            color: #000;
+            font-size: 12px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .checkbox-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        
+        .export-status {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 10px;
+            margin-top: 8px;
+            font-size: 10px;
+            color: #888;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  <div id="gui-panel">
+    <div id="gui-panel-content"></div>
+    <div id="gui-panel-footer"></div>
+  </div>
+
+  <script>
+let particles, sliders, m, n, a, b, v, N;
+// vibration strength params
+let A = 0.5;
+let minWalk = 0.01;
+let lineColor = '#FF6464'; // Default line color
+
+const settings = {
+  nParticles : 2000, // Reduced for small particles
+  canvasSize : [600, 849], // A4 ratio: 600 × (600 * 1.414) = 600 × 849
+  drawHeatmap : false,
+  drawLineArt : true, // Default to true
+  lineArtResolution : 8,
+  exportStrokeWidth: 2
+}
+const pi = 3.1415926535;
+
+// chladni 2D closed-form solution - returns between -1 and 1
+const chladni = (x, y, a, b, m, n) => {
+  return a * sin(pi*n*x) * sin(pi*m*y) + b * sin(pi*m*x) * sin(pi*n*y);
+}
+
+// SVG Export Functions
+function generateSVGContent() {
+  let svgLines = [];
+  
+  let gridRes = int(settings.lineArtResolution * 6);
+  for (let i = 0; i < gridRes; i++) {
+    for (let j = 0; j < gridRes; j++) {
+      let x1 = (i / gridRes) * settings.canvasSize[0];
+      let y1 = (j / gridRes) * settings.canvasSize[1];
+      let x2 = ((i + 1) / gridRes) * settings.canvasSize[0];
+      let y2 = ((j + 1) / gridRes) * settings.canvasSize[1];
+      
+      let eq1 = chladni(i / gridRes, j / gridRes, a, b, m, n);
+      let eq2 = chladni((i + 1) / gridRes, j / gridRes, a, b, m, n);
+      let eq3 = chladni(i / gridRes, (j + 1) / gridRes, a, b, m, n);
+      
+      // Add line segments where the equation crosses zero
+      if ((eq1 > 0 && eq2 < 0) || (eq1 < 0 && eq2 > 0)) {
+        svgLines.push(`<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x2.toFixed(2)}" y2="${y1.toFixed(2)}" />`);
+      }
+      if ((eq1 > 0 && eq3 < 0) || (eq1 < 0 && eq3 > 0)) {
+        svgLines.push(`<line x1="${x1.toFixed(2)}" y1="${y1.toFixed(2)}" x2="${x1.toFixed(2)}" y2="${y2.toFixed(2)}" />`);
+      }
+    }
+  }
+  
+  // Generate SVG content
+  const svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${settings.canvasSize[0]}" height="${settings.canvasSize[1]}" 
+     viewBox="0 0 ${settings.canvasSize[0]} ${settings.canvasSize[1]}" 
+     xmlns="http://www.w3.org/2000/svg">
+  <title>Chladni Pattern - m:${m} n:${n} a:${a} b:${b}</title>
+  <desc>Generated Chladni plate pattern with frequency parameters m=${m}, n=${n}, amplitudes a=${a}, b=${b}</desc>
+  <g stroke="${lineColor}" stroke-width="${settings.exportStrokeWidth}" stroke-linecap="round" fill="none">
+    ${svgLines.join('\n    ')}
+  </g>
+</svg>`;
+  
+  return svgContent;
+}
+
+function exportCurrentFrame() {
+  const svgContent = generateSVGContent();
+  const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
+  const filename = `chladni_lines_m${m}_n${n}_a${a}_b${b}_${timestamp}.svg`;
+  
+  downloadSVG(svgContent, filename);
+  showExportStatus(`Exported: ${filename}`);
+}
+
+function downloadSVG(content, filename) {
+  const blob = new Blob([content], { type: 'image/svg+xml' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function showExportStatus(message) {
+  const status = document.getElementById('export-status');
+  status.textContent = message;
+  status.style.display = 'block';
+  setTimeout(() => {
+    status.style.display = 'none';
+  }, 3000);
+}
+
+// Helper function to convert hex to RGB
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+
+/* Initialization */
+const DOMinit = () => {
+  let canvas = createCanvas(...settings.canvasSize);
+  canvas.parent('canvas-container');
+  
+  createGui();
+}
+
+function createGui() {
+  const panel = document.getElementById('gui-panel-content');
+  const footer = document.getElementById('gui-panel-footer');
+  panel.innerHTML = '';
+  footer.innerHTML = '';
+  
+  const mainGrid = document.createElement('div');
+  mainGrid.className = 'gui-main-grid';
+  panel.appendChild(mainGrid);
+  
+  // Frequency Parameters Section
+  const freqSection = createSection('Frequency Parameters', mainGrid);
+  const freqGrid = document.createElement('div');
+  freqGrid.className = 'control-grid';
+  freqSection.appendChild(freqGrid);
+  
+  addSlider(freqGrid, 'm', 'Frequency M', 1, 16, 1);
+  addSlider(freqGrid, 'n', 'Frequency N', 1, 16, 1);
+  addSlider(freqGrid, 'a', 'Amplitude A', -2, 2, 0.1);
+  addSlider(freqGrid, 'b', 'Amplitude B', -2, 2, 0.1);
+  
+  // Line Detail Section
+  const detailSection = createSection('Line Detail', mainGrid);
+  const detailGrid = document.createElement('div');
+  detailGrid.className = 'control-grid';
+  detailSection.appendChild(detailGrid);
+  
+  addSlider(detailGrid, 'resolution', 'Line Resolution', 4, 16, 1);
+  addColorInput(detailGrid, 'lineColor', 'Line Color');
+  
+  // Export Controls Section
+  const exportSection = createSection('Export Controls', mainGrid);
+  const exportGrid = document.createElement('div');
+  exportGrid.className = 'control-grid';
+  exportSection.appendChild(exportGrid);
+  
+  addSlider(exportGrid, 'strokeWidth', 'Export Line Width', 0.5, 10, 0.5);
+  
+  // Export status message
+  const exportStatus = document.createElement('div');
+  exportStatus.id = 'export-status';
+  exportStatus.className = 'export-status';
+  exportSection.appendChild(exportStatus);
+  
+  // FOOTER - Export Button
+  const exportBottomRow = document.createElement('div');
+  exportBottomRow.style.display = 'flex';
+  footer.appendChild(exportBottomRow);
+  
+  const exportBtn = document.createElement('button');
+  exportBtn.className = 'export-button';
+  exportBtn.textContent = 'Export Lines as SVG';
+  exportBtn.onclick = exportCurrentFrame;
+  exportBottomRow.appendChild(exportBtn);
+  
+  setupInitialValues();
+}
+
+function createSection(title, parent) {
+  const section = document.createElement('div');
+  section.className = 'gui-section';
+  
+  const titleElement = document.createElement('div');
+  titleElement.className = 'section-title';
+  titleElement.textContent = title;
+  section.appendChild(titleElement);
+  
+  parent.appendChild(section);
+  return section;
+}
+
+function addSlider(parent, key, label, min, max, step) {
+  const group = document.createElement('div');
+  group.className = 'control-group';
+  
+  const labelElement = document.createElement('div');
+  labelElement.className = 'control-label';
+  labelElement.textContent = label;
+  group.appendChild(labelElement);
+  
+  const sliderContainer = document.createElement('div');
+  sliderContainer.className = 'slider-container';
+  
+  const slider = document.createElement('input');
+  slider.type = 'range';
+  slider.className = 'gui-slider';
+  slider.min = min;
+  slider.max = max;
+  slider.step = step;
+  slider.dataset.key = key;
+  
+  const valueDisplay = document.createElement('div');
+  valueDisplay.className = 'slider-value';
+  
+  slider.addEventListener('input', (e) => {
+    const value = parseFloat(e.target.value);
+    valueDisplay.textContent = value.toFixed(step < 1 ? 1 : 0);
+    
+    // Handle different parameter types
+    if (key === 'resolution') {
+      settings.lineArtResolution = value;
+    } else if (key === 'strokeWidth') {
+      settings.exportStrokeWidth = value;
+    }
+  });
+  
+  sliderContainer.appendChild(slider);
+  sliderContainer.appendChild(valueDisplay);
+  group.appendChild(sliderContainer);
+  parent.appendChild(group);
+}
+
+function addColorInput(parent, key, label) {
+  const group = document.createElement('div');
+  group.className = 'control-group';
+  
+  const labelElement = document.createElement('div');
+  labelElement.className = 'control-label';
+  labelElement.textContent = label;
+  group.appendChild(labelElement);
+  
+  const colorInput = document.createElement('input');
+  colorInput.type = 'color';
+  colorInput.className = 'color-wheel';
+  colorInput.value = lineColor || '#FF6464';
+  colorInput.dataset.key = key;
+  
+  colorInput.addEventListener('input', (e) => {
+    lineColor = e.target.value;
+  });
+  
+  group.appendChild(colorInput);
+  parent.appendChild(group);
+}
+
+function addButton(parent, text, callback) {
+  const button = document.createElement('button');
+  button.className = 'gui-button export-btn';
+  button.textContent = text;
+  button.addEventListener('click', callback);
+  parent.appendChild(button);
+}
+
+function setupInitialValues() {
+  const sliders = document.querySelectorAll('.gui-slider');
+  sliders.forEach(slider => {
+    const key = slider.dataset.key;
+    let defaultValue;
+    
+    if (key === 'm') defaultValue = 8;
+    else if (key === 'n') defaultValue = 4;
+    else if (key === 'a') defaultValue = 1;
+    else if (key === 'b') defaultValue = 1;
+    else if (key === 'resolution') defaultValue = 8;
+    else if (key === 'strokeWidth') defaultValue = 2;
+    
+    slider.value = defaultValue;
+    const step = parseFloat(slider.step);
+    const valueDisplay = slider.parentElement.querySelector('.slider-value');
+    valueDisplay.textContent = defaultValue.toFixed(step < 1 ? 1 : 0);
+  });
+  
+  // Set initial vibration value
+  v = 0.5;
+}
+
+const setupParticles = () => {
+  particles = [];
+  for (let i = 0; i < settings.nParticles; i++) {
+    particles[i] = new Particle();
+  }
+}
+
+/* Particle dynamics */
+class Particle {
+  constructor() {
+    this.x = random(0,1);
+    this.y = random(0,1);
+    this.stochasticAmplitude;
+    
+    this.updateOffsets();
+  }
+  
+  move() {
+    // Calculate the chladni field value at current position
+    let eq = chladni(this.x, this.y, a, b, m, n);
+    
+    // Calculate gradient (force field) - particles move away from high vibration areas
+    let step = 0.01;
+    let eqX = chladni(this.x + step, this.y, a, b, m, n);
+    let eqY = chladni(this.x, this.y + step, a, b, m, n);
+    
+    // Force is negative gradient (move away from high amplitude)
+    let forceX = -(eqX - eq) / step;
+    let forceY = -(eqY - eq) / step;
+    
+    // Apply forces with vibration strength
+    this.x += forceX * v * 0.1;
+    this.y += forceY * v * 0.1;
+    
+    // Add some random motion for realistic particle behavior
+    this.stochasticAmplitude = v * abs(eq) * 0.5;
+    if (this.stochasticAmplitude < minWalk) this.stochasticAmplitude = minWalk;
+    
+    this.x += random(-this.stochasticAmplitude, this.stochasticAmplitude);
+    this.y += random(-this.stochasticAmplitude, this.stochasticAmplitude);
+
+    this.updateOffsets();
+  }
+  
+  updateOffsets() {
+    // handle edges
+    if (this.x <= 0) this.x = 0;
+    if (this.x >= 1) this.x = 1;
+    if (this.y <= 0) this.y = 0;
+    if (this.y >= 1) this.y = 1;
+    // convert to screen space
+    this.xOff = width * this.x;
+    this.yOff = height * this.y;
+  }
+  
+  show() {
+    strokeWeight(0.5); // Smaller particles
+    stroke(255, 200, 100, 150); // More transparent
+    point(this.xOff, this.yOff);
+  }
+}
+
+const moveParticles = () => {
+  let movingParticles = particles.slice(0, N);
+  for(let particle of movingParticles) {
+    particle.move();
+    particle.show();
+  }
+}
+
+const updateParams = () => {
+  // Get values from sliders
+  const sliders = document.querySelectorAll('.gui-slider');
+  sliders.forEach(slider => {
+    const key = slider.dataset.key;
+    const value = parseFloat(slider.value);
+    
+    if (key === 'm') m = value;
+    if (key === 'n') n = value;
+    if (key === 'a') a = value;
+    if (key === 'b') b = value;
+    if (key === 'resolution') settings.lineArtResolution = value;
+    if (key === 'strokeWidth') settings.exportStrokeWidth = value;
+  });
+  
+  N = settings.nParticles; // Fixed particle count
+}
+
+const drawLineArt = () => {
+  // Convert hex color to RGB
+  const rgb = hexToRgb(lineColor);
+  if (rgb) {
+    stroke(rgb.r, rgb.g, rgb.b, 200);
+  } else {
+    stroke(255, 100, 100, 200); // Fallback color
+  }
+  strokeWeight(2);
+  
+  let gridRes = int(settings.lineArtResolution * 6); // Make resolution slider more effective
+  for (let i = 0; i < gridRes; i++) {
+    for (let j = 0; j < gridRes; j++) {
+      let x1 = (i / gridRes) * width;
+      let y1 = (j / gridRes) * height;
+      let x2 = ((i + 1) / gridRes) * width;
+      let y2 = ((j + 1) / gridRes) * height;
+      
+      let eq1 = chladni(i / gridRes, j / gridRes, a, b, m, n);
+      let eq2 = chladni((i + 1) / gridRes, j / gridRes, a, b, m, n);
+      let eq3 = chladni(i / gridRes, (j + 1) / gridRes, a, b, m, n);
+      
+      // Draw line segments where the equation crosses zero
+      if ((eq1 > 0 && eq2 < 0) || (eq1 < 0 && eq2 > 0)) {
+        line(x1, y1, x2, y1);
+      }
+      if ((eq1 > 0 && eq3 < 0) || (eq1 < 0 && eq3 > 0)) {
+        line(x1, y1, x1, y2);
+      }
+    }
+  }
+}
+
+const wipeScreen = () => {
+  background('#e1d5ba'); // Changed from black (30) to cream color
+  strokeWeight(1);
+  stroke(255);
+}
+
+/* Timing */
+// run at DOM load
+function setup() {
+  DOMinit();
+  setupParticles();
+}
+
+// run each frame
+function draw() {
+  wipeScreen();
+  updateParams();
+  
+  // Always draw line art (default mode)
+  drawLineArt();
+  
+  // Then draw small particles
+  moveParticles();
+}
+  </script>
+</body>
+</html>

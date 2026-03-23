@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generative Typography Tool</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300;400;700;800&display=swap');
+        
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Martian Mono', monospace !important;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            padding: 20px;
+        }
+        
+        /* Canvas Container */
+        #canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background: #000;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid #222;
+        }
+        
+        canvas {
+            border: 1px solid #333;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        /* Control Panel */
+        #controls {
+            background: #111;
+            padding: 25px;
+            width: 420px;
+            height: 100%;
+            overflow-y: auto;
+            border: 1px solid #222;
+            margin-left: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            box-sizing: border-box;
+        }
+        
+        #controls::-webkit-scrollbar {
+            display: none;
+        }
+        
+        /* Sections */
+        .control-group {
+            margin-bottom: 14px;
+        }
+        
+        /* Labels */
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 10px;
+            font-weight: 300;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Value Display */
+        .value-display {
+            display: inline-block;
+            float: right;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+        }
+        
+        /* Heading */
+        h1 {
+            font-size: 13px;
+            margin: 0 0 15px 0;
+            font-weight: 800;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: #222;
+            margin: 25px 0;
+            padding-bottom: 20px;
+            border: none;
+        }
+        
+        /* Input Elements */
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            box-sizing: border-box;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            padding: 0;
+            accent-color: #fff;
+            cursor: pointer;
+        }
+        
+        input[type="color"] {
+            width: 100%;
+            height: 35px;
+            border: 1px solid #333;
+            cursor: pointer;
+            background: #1a1a1a;
+            border-radius: 6px;
+        }
+        
+        input[type="file"] {
+            width: 100%;
+            font-size: 11px;
+            padding: 10px;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+        }
+        
+        input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        /* Buttons */
+        button {
+            width: 100%;
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        
+        button:hover {
+            background: #e0e0e0;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="controls">
+        <h1>Generative Typography</h1>
+        
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="useSVG"> Use Custom SVG
+            </label>
+        </div>
+        
+        <div class="control-group" id="svgUploadGroup" style="display: none;">
+            <label>Upload SVG File</label>
+            <input type="file" id="svgUpload" accept=".svg">
+        </div>
+        
+        <div class="control-group" id="svgSizeGroup" style="display: none;">
+            <label>SVG Size <span class="value-display" id="svgSizeValue">80</span>%</label>
+            <input type="range" id="svgSize" min="10" max="200" value="80">
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div id="textControls">
+            <div class="control-group">
+                <label>Text</label>
+                <input type="text" id="textInput" value="MULTI|LINE">
+            </div>
+            
+            <div class="control-group">
+                <label>Text Direction</label>
+                <select id="textDirection">
+                    <option value="ltr">Left-to-Right (LTR)</option>
+                    <option value="rtl">Right-to-Left (RTL)</option>
+                </select>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <div class="control-group">
+                <label>Font Size <span class="value-display" id="fontSizeValue">200</span></label>
+                <input type="range" id="fontSize" min="50" max="400" value="200">
+            </div>
+            
+            <div class="control-group">
+                <label>Letter Spacing <span class="value-display" id="trackingValue">0</span></label>
+                <input type="range" id="tracking" min="-20" max="100" value="0">
+            </div>
+            
+            <div class="control-group">
+                <label>Line Spacing <span class="value-display" id="lineSpacingValue">1.2</span></label>
+                <input type="range" id="lineSpacing" min="0.8" max="2.0" step="0.1" value="1.2">
+            </div>
+            
+            <div class="divider"></div>
+        </div>
+        
+        <div class="control-group">
+            <label>Particle Type</label>
+            <select id="particleType">
+                <option value="dots">Dots</option>
+                <option value="lines">Lines</option>
+                <option value="rectangles">Rectangles</option>
+                <option value="polygons">Polygons</option>
+                <option value="mixed">Mixed</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>Particle Density <span class="value-display" id="densityValue">0.5</span></label>
+            <input type="range" id="density" min="0.05" max="5.0" step="0.05" value="0.5">
+        </div>
+        
+        <div class="control-group">
+            <label>Min Spacing <span class="value-display" id="spacingValue">8</span></label>
+            <input type="range" id="spacing" min="1" max="30" value="8">
+        </div>
+        
+        <div class="control-group">
+            <label>Arrangement Irregularity <span class="value-display" id="arrangementValue">0.5</span></label>
+            <input type="range" id="arrangement" min="0" max="1" step="0.05" value="0.5">
+        </div>
+        
+        <div class="control-group">
+            <label>Particle Bleed <span class="value-display" id="bleedValue">0</span></label>
+            <input type="range" id="bleed" min="0" max="40" value="0">
+        </div>
+        
+        <div class="control-group">
+            <label>Bleed Randomness <span class="value-display" id="bleedRandomnessValue">0.8</span></label>
+            <input type="range" id="bleedRandomness" min="0" max="2.0" step="0.1" value="0.8">
+        </div>
+        
+        <div class="control-group">
+            <label>Particle Size <span class="value-display" id="particleSizeValue">3</span></label>
+            <input type="range" id="particleSize" min="1" max="10" step="0.5" value="3">
+        </div>
+        
+        <div class="control-group">
+            <label>Size Variation <span class="value-display" id="sizeVariationValue">0.3</span></label>
+            <input type="range" id="sizeVariation" min="0" max="1" step="0.1" value="0.3">
+        </div>
+        
+        <div class="control-group">
+            <label>Edge Softness <span class="value-display" id="edgeSoftnessValue">10</span></label>
+            <input type="range" id="edgeSoftness" min="0" max="30" value="10">
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="control-group">
+            <label>Background Color</label>
+            <input type="color" id="bgColor" value="#ffffff">
+        </div>
+        
+        <div class="control-group">
+            <label>Color A</label>
+            <input type="color" id="colorA" value="#000000">
+        </div>
+        
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="useDualColor"> Use Color B
+            </label>
+        </div>
+        
+        <div class="control-group" id="colorBGroup" style="display: none;">
+            <label>Color B</label>
+            <input type="color" id="colorB" value="#FF0000">
+        </div>
+        
+        <div class="control-group" id="ratioGroup" style="display: none;">
+            <label>Color A Ratio <span class="value-display" id="colorRatioValue">50</span>%</label>
+            <input type="range" id="colorRatio" min="0" max="100" value="50">
+        </div>
+        
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="showOutline" checked> Show Letter Outlines
+            </label>
+        </div>
+        
+        <div class="control-group">
+            <label>
+                <input type="checkbox" id="invertMode"> Invert (Empty Letters)
+            </label>
+        </div>
+        
+        <div class="divider"></div>
+        
+        <div class="control-group">
+            <label>Custom Font (.ttf / .otf)</label>
+            <input type="file" id="fontUpload" accept=".ttf,.otf">
+        </div>
+        
+        <button id="generateBtn">Generate</button>
+        <button id="exportBtn">Export High Quality PNG</button>
+    </div>
+
+    <script>
+        // ============================================
+        // GLOBAL VARIABLES AND STATE
+        // ============================================
+        
+        let particles = [];
+        let letterBounds = [];
+        let currentFont = null;
+        let customFont = null;
+        let isGenerating = false;
+        let svgPaths = null; // Stores parsed SVG path data
+        let useSVGMode = false; // Toggle between text and SVG mode
+        
+        // Configuration object holding all parameters
+        let config = {
+            text: 'MULTI|LINE',
+            textDirection: 'ltr',
+            fontSize: 200,
+            tracking: 0,
+            lineSpacing: 1.2,
+            particleType: 'dots',
+            density: 0.5,
+            minSpacing: 8,
+            arrangement: 0.5,
+            particleSize: 3,
+            sizeVariation: 0.3,
+            edgeSoftness: 10,
+            bgColor: '#ffffff',
+            colorA: '#000000',
+            useDualColor: false,
+            colorB: '#FF0000',
+            colorRatio: 50,
+            showOutline: true,
+            bleed: 0,
+            bleedRandomness: 0.8,
+            svgSize: 80, // SVG size as percentage
+            invertMode: false // Invert particles (background instead of letters)
+        };
+        
+        // ============================================
+        // P5.JS SETUP
+        // ============================================
+        
+        function preload() {
+            // Load a web font that supports textToPoints
+            // Using Google Fonts API to load a bold sans-serif
+            currentFont = loadFont('https://cdnjs.cloudflare.com/ajax/libs/topcoat/0.8.0/font/SourceCodePro-Bold.otf');
+        }
+        
+        function setup() {
+            let canvas = createCanvas(1200, 800);
+            canvas.parent('canvas-container');
+            
+            // Initialize noise for organic bleed effects
+            noiseSeed(random(10000));
+            
+            // Set up UI event listeners
+            setupUIControls();
+            
+            // Initial generation - wait a bit for everything to be ready
+            setTimeout(() => {
+                generateTypography();
+            }, 100);
+        }
+        
+        function draw() {
+            // Static rendering - no animation loop needed
+            // Draw happens once per generation
+            noLoop();
+        }
+        
+        // ============================================
+        // UI CONTROL SETUP
+        // ============================================
+        
+        function setupUIControls() {
+            // Text input
+            select('#textInput').input(() => {
+                config.text = select('#textInput').value();
+            });
+            
+            // Text direction
+            select('#textDirection').changed(() => {
+                config.textDirection = select('#textDirection').value();
+            });
+            
+            // Font size
+            select('#fontSize').input(() => {
+                config.fontSize = parseFloat(select('#fontSize').value());
+                select('#fontSizeValue').html(config.fontSize);
+            });
+            
+            // Tracking (letter spacing)
+            select('#tracking').input(() => {
+                config.tracking = parseFloat(select('#tracking').value());
+                select('#trackingValue').html(config.tracking);
+            });
+            
+            // Line spacing
+            select('#lineSpacing').input(() => {
+                config.lineSpacing = parseFloat(select('#lineSpacing').value());
+                select('#lineSpacingValue').html(config.lineSpacing);
+            });
+            
+            // Particle type
+            select('#particleType').changed(() => {
+                config.particleType = select('#particleType').value();
+            });
+            
+            // Density
+            select('#density').input(() => {
+                config.density = parseFloat(select('#density').value());
+                select('#densityValue').html(config.density);
+            });
+            
+            // Minimum spacing
+            select('#spacing').input(() => {
+                config.minSpacing = parseFloat(select('#spacing').value());
+                select('#spacingValue').html(config.minSpacing);
+            });
+            
+            // Arrangement irregularity
+            select('#arrangement').input(() => {
+                config.arrangement = parseFloat(select('#arrangement').value());
+                select('#arrangementValue').html(config.arrangement);
+            });
+            
+            // Particle bleed
+            select('#bleed').input(() => {
+                config.bleed = parseFloat(select('#bleed').value());
+                select('#bleedValue').html(config.bleed);
+            });
+            
+            // Bleed randomness
+            select('#bleedRandomness').input(() => {
+                config.bleedRandomness = parseFloat(select('#bleedRandomness').value());
+                select('#bleedRandomnessValue').html(config.bleedRandomness);
+            });
+            
+            // Particle size
+            select('#particleSize').input(() => {
+                config.particleSize = parseFloat(select('#particleSize').value());
+                select('#particleSizeValue').html(config.particleSize);
+            });
+            
+            // Size variation
+            select('#sizeVariation').input(() => {
+                config.sizeVariation = parseFloat(select('#sizeVariation').value());
+                select('#sizeVariationValue').html(config.sizeVariation);
+            });
+            
+            // Edge softness
+            select('#edgeSoftness').input(() => {
+                config.edgeSoftness = parseFloat(select('#edgeSoftness').value());
+                select('#edgeSoftnessValue').html(config.edgeSoftness);
+            });
+            
+            // Background color
+            select('#bgColor').input(() => {
+                config.bgColor = select('#bgColor').value();
+            });
+            
+            // Color A
+            select('#colorA').input(() => {
+                config.colorA = select('#colorA').value();
+            });
+            
+            // Dual color toggle
+            select('#useDualColor').changed(() => {
+                config.useDualColor = select('#useDualColor').checked();
+                document.getElementById('colorBGroup').style.display = config.useDualColor ? 'block' : 'none';
+                document.getElementById('ratioGroup').style.display = config.useDualColor ? 'block' : 'none';
+            });
+            
+            // Color B
+            select('#colorB').input(() => {
+                config.colorB = select('#colorB').value();
+            });
+            
+            // Color ratio
+            select('#colorRatio').input(() => {
+                config.colorRatio = parseFloat(select('#colorRatio').value());
+                select('#colorRatioValue').html(config.colorRatio);
+            });
+            
+            // Show outline toggle
+            select('#showOutline').changed(() => {
+                config.showOutline = select('#showOutline').checked();
+                generateTypography();
+            });
+            
+            // Invert mode toggle
+            select('#invertMode').changed(() => {
+                config.invertMode = select('#invertMode').checked();
+                generateTypography();
+            });
+            
+            // Font upload
+            select('#fontUpload').changed((e) => {
+                let file = e.target.files[0];
+                if (file) {
+                    loadFont(URL.createObjectURL(file), (font) => {
+                        customFont = font;
+                        generateTypography();
+                    });
+                }
+            });
+            
+            // SVG mode toggle
+            select('#useSVG').changed(() => {
+                useSVGMode = select('#useSVG').checked();
+                
+                // Show/hide appropriate controls
+                if (useSVGMode) {
+                    select('#svgUploadGroup').style('display', 'block');
+                    select('#svgSizeGroup').style('display', 'block');
+                    select('#textControls').style('display', 'none');
+                } else {
+                    select('#svgUploadGroup').style('display', 'none');
+                    select('#svgSizeGroup').style('display', 'none');
+                    select('#textControls').style('display', 'block');
+                    svgPaths = null; // Clear SVG data
+                }
+                
+                generateTypography();
+            });
+            
+            // SVG upload
+            select('#svgUpload').changed((e) => {
+                let file = e.target.files[0];
+                if (file) {
+                    let reader = new FileReader();
+                    reader.onload = function(event) {
+                        parseSVG(event.target.result);
+                    };
+                    reader.readAsText(file);
+                }
+            });
+            
+            // SVG size
+            select('#svgSize').input(() => {
+                config.svgSize = parseFloat(select('#svgSize').value());
+                select('#svgSizeValue').html(config.svgSize);
+                generateTypography();
+            });
+            
+            // Generate button
+            select('#generateBtn').mousePressed(() => {
+                generateTypography();
+            });
+            
+            // Export button
+            select('#exportBtn').mousePressed(() => {
+                exportHighQuality();
+            });
+        }
+        
+        // ============================================
+        // MAIN GENERATION FUNCTION
+        // ============================================
+        
+        function generateTypography() {
+            if (isGenerating) return;
+            isGenerating = true;
+            
+            // Show loading state
+            background(config.bgColor);
+            fill(100);
+            textSize(16);
+            textAlign(CENTER, CENTER);
+            text('Generating...', width / 2, height / 2);
+            
+            // Use setTimeout to allow UI to update before heavy computation
+            setTimeout(() => {
+                console.log('=== Starting generation ===');
+                console.log('Mode:', useSVGMode ? 'SVG' : 'Text');
+                
+                // Generate new noise pattern for varied bleed
+                noiseSeed(random(10000));
+                
+                // Clear previous state
+                particles = [];
+                letterBounds = [];
+                
+                // Set background
+                background(config.bgColor);
+            
+            try {
+                // Choose generation method based on mode
+                if (useSVGMode && svgPaths) {
+                    // SVG mode - use uploaded SVG paths
+                    console.log('Processing SVG paths...');
+                    processSVGPaths();
+                } else {
+                    // Text mode - use font rendering
+                    console.log('Text:', config.text);
+                    console.log('Font size:', config.fontSize);
+                    
+                    // Set up font - use custom if uploaded, otherwise use the preloaded font
+                    if (customFont) {
+                        textFont(customFont);
+                        console.log('Using custom uploaded font');
+                    } else if (currentFont) {
+                        textFont(currentFont);
+                        console.log('Using preloaded default font');
+                    } else {
+                        console.error('No font available!');
+                        isGenerating = false;
+                        return;
+                    }
+                    
+                    textSize(config.fontSize);
+                    textAlign(LEFT, BASELINE);
+                    
+                    // Get text outlines and process each letter
+                    processTextToLetters();
+                }
+                
+                console.log('Letter bounds created:', letterBounds.length);
+                
+                // Draw outlines if enabled
+                if (config.showOutline) {
+                    drawLetterOutlines();
+                }
+                
+                // Generate particles
+                if (config.invertMode) {
+                    // INVERT MODE: Generate background particles (letters are empty)
+                    console.log('Generating inverted particles (background only)...');
+                    generateBackgroundParticles();
+                } else {
+                    // NORMAL MODE: Generate particles for each letter
+                    for (let i = 0; i < letterBounds.length; i++) {
+                        console.log(`Processing letter ${i + 1}/${letterBounds.length}: "${letterBounds[i].char}"`);
+                        generateParticlesForLetter(letterBounds[i]);
+                    }
+                }
+                
+                console.log('Total particles generated:', particles.length);
+                
+                // Render all particles
+                renderParticles();
+                
+                console.log('=== Generation complete ===');
+            } catch(e) {
+                console.error('Generation error:', e);
+                // Draw error message
+                background(config.bgColor);
+                fill(255, 0, 0);
+                textSize(16);
+                textAlign(CENTER, CENTER);
+                text('Error: ' + e.message, width / 2, height / 2);
+            }
+            
+            isGenerating = false;
+            }, 50); // Small delay to let UI update
+        }
+        
+        /**
+         * Draw letter outlines for reference
+         */
+        function drawLetterOutlines() {
+            stroke(200);
+            strokeWeight(1);
+            noFill();
+            
+            for (let letterData of letterBounds) {
+                beginShape();
+                for (let p of letterData.points) {
+                    vertex(p.x, p.y);
+                }
+                endShape(CLOSE);
+            }
+            
+            noStroke();
+        }
+        
+        // ============================================
+        // TEXT PROCESSING
+        // ============================================
+        
+        /**
+         * Converts input text into individual letter bounds
+         * Handles multi-line text and letter spacing
+         */
+        function processTextToLetters() {
+            // Replace pipe character with newline for multi-line support
+            let processedText = config.text.replace(/\|/g, '\n');
+            let lines = processedText.split('\n');
+            let startY = height / 2 - (lines.length - 1) * config.fontSize * config.lineSpacing / 2;
+            
+            // Get the current font being used
+            let font = customFont || currentFont;
+            console.log('Font object:', font);
+            
+            // Check if font has textToPoints method
+            if (!font || !font.textToPoints) {
+                console.error('Font does not have textToPoints method!');
+                throw new Error('Font does not support textToPoints');
+            }
+            
+            for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+                let line = lines[lineIndex];
+                let currentY = startY + lineIndex * config.fontSize * config.lineSpacing;
+                
+                if (line.trim() === '') continue;
+                
+                // Calculate total width for centering
+                let totalWidth = 0;
+                for (let i = 0; i < line.length; i++) {
+                    if (line.charAt(i).trim() !== '') {
+                        totalWidth += textWidth(line.charAt(i)) + config.tracking;
+                    } else {
+                        totalWidth += textWidth(' ') + config.tracking;
+                    }
+                }
+                
+                let startX = (width - totalWidth) / 2;
+                
+                // For RTL, start from the right
+                let currentX = config.textDirection === 'rtl' ? 
+                               startX + totalWidth : 
+                               startX;
+                
+                // Process each character
+                let charArray = line.split('');
+                
+                // For RTL, process characters right to left
+                if (config.textDirection === 'rtl') {
+                    charArray.reverse();
+                }
+                
+                for (let i = 0; i < charArray.length; i++) {
+                    let char = charArray[i];
+                    let charWidth = textWidth(char);
+                    
+                    if (char.trim() === '') {
+                        if (config.textDirection === 'rtl') {
+                            currentX -= (textWidth(' ') + config.tracking);
+                        } else {
+                            currentX += (textWidth(' ') + config.tracking);
+                        }
+                        continue;
+                    }
+                    
+                    // For RTL, position is adjusted for character width
+                    let charX = config.textDirection === 'rtl' ? 
+                                currentX - charWidth : 
+                                currentX;
+                    
+                    try {
+                        // Get character outline points
+                        // Higher sampleFactor = more points = smoother curves
+                        let points = font.textToPoints(char, charX, currentY, config.fontSize, {
+                            sampleFactor: 0.5,  // Increased from 0.2 for denser sampling
+                            simplifyThreshold: 0
+                        });
+                        
+                        console.log(`Char "${char}" at (${charX}, ${currentY}): ${points.length} points`);
+                        
+                        if (points && points.length > 0) {
+                            // Calculate bounding box
+                            let minX = Math.min(...points.map(p => p.x));
+                            let maxX = Math.max(...points.map(p => p.x));
+                            let minY = Math.min(...points.map(p => p.y));
+                            let maxY = Math.max(...points.map(p => p.y));
+                            
+                            letterBounds.push({
+                                char: char,
+                                points: points,
+                                bounds: { minX, maxX, minY, maxY },
+                                x: charX,
+                                y: currentY
+                            });
+                        }
+                    } catch(e) {
+                        console.error(`Error processing character "${char}":`, e);
+                    }
+                    
+                    // Advance position
+                    if (config.textDirection === 'rtl') {
+                        currentX -= (charWidth + config.tracking);
+                    } else {
+                        currentX += (charWidth + config.tracking);
+                    }
+                }
+            }
+        }
+        
+        // ============================================
+        // SVG PROCESSING
+        // ============================================
+        
+        /**
+         * Parse SVG file and extract path data
+         */
+        function parseSVG(svgContent) {
+            console.log('Parsing SVG...');
+            
+            // Create a temporary DOM element to parse SVG
+            let parser = new DOMParser();
+            let svgDoc = parser.parseFromString(svgContent, 'image/svg+xml');
+            
+            // Get SVG dimensions for scaling
+            let svgElement = svgDoc.querySelector('svg');
+            let viewBox = svgElement.getAttribute('viewBox');
+            let svgWidth, svgHeight;
+            
+            if (viewBox) {
+                let parts = viewBox.split(' ');
+                svgWidth = parseFloat(parts[2]);
+                svgHeight = parseFloat(parts[3]);
+            } else {
+                svgWidth = parseFloat(svgElement.getAttribute('width')) || 100;
+                svgHeight = parseFloat(svgElement.getAttribute('height')) || 100;
+            }
+            
+            // Extract all paths
+            let pathElements = svgDoc.querySelectorAll('path, polygon, polyline, rect, circle, ellipse');
+            svgPaths = [];
+            
+            pathElements.forEach((pathElem, index) => {
+                let pathData = null;
+                
+                if (pathElem.tagName === 'path') {
+                    pathData = pathElem.getAttribute('d');
+                } else {
+                    // Convert other shapes to path data
+                    pathData = convertShapeToPath(pathElem);
+                }
+                
+                if (pathData) {
+                    svgPaths.push({
+                        data: pathData,
+                        index: index
+                    });
+                }
+            });
+            
+            console.log(`Found ${svgPaths.length} paths in SVG`);
+            console.log(`SVG dimensions: ${svgWidth}x${svgHeight}`);
+            
+            // Store SVG dimensions for scaling
+            svgPaths.svgWidth = svgWidth;
+            svgPaths.svgHeight = svgHeight;
+            
+            // Generate typography with new SVG
+            generateTypography();
+        }
+        
+        /**
+         * Convert SVG shapes to path data
+         */
+        function convertShapeToPath(element) {
+            // Simple conversion - for basic shapes
+            // Full implementation would need more complex conversions
+            return null; // For now, only support <path> elements
+        }
+        
+        /**
+         * Process SVG paths and convert to letter bounds format
+         */
+        function processSVGPaths() {
+            if (!svgPaths || svgPaths.length === 0) {
+                console.error('No SVG paths available');
+                return;
+            }
+            
+            // Calculate scale to fit SVG into canvas using user-controlled size
+            let scaleX = width / svgPaths.svgWidth;
+            let scaleY = height / svgPaths.svgHeight;
+            let scale = Math.min(scaleX, scaleY) * (config.svgSize / 100); // Use config.svgSize percentage
+            
+            // Center offset
+            let offsetX = (width - svgPaths.svgWidth * scale) / 2;
+            let offsetY = (height - svgPaths.svgHeight * scale) / 2;
+            
+            svgPaths.forEach((pathInfo, index) => {
+                // Sample points from SVG path
+                let points = samplePathPoints(pathInfo.data, scale, offsetX, offsetY);
+                
+                if (points && points.length > 0) {
+                    // Calculate bounding box
+                    let minX = Math.min(...points.map(p => p.x));
+                    let maxX = Math.max(...points.map(p => p.x));
+                    let minY = Math.min(...points.map(p => p.y));
+                    let maxY = Math.max(...points.map(p => p.y));
+                    
+                    letterBounds.push({
+                        char: `SVG Path ${index + 1}`,
+                        points: points,
+                        bounds: { minX, maxX, minY, maxY },
+                        x: minX,
+                        y: minY
+                    });
+                }
+            });
+        }
+        
+        /**
+         * Sample points from SVG path data
+         */
+        function samplePathPoints(pathData, scale, offsetX, offsetY) {
+            // Use browser's SVG path API to sample points
+            let tempSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            let path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', pathData);
+            tempSvg.appendChild(path);
+            document.body.appendChild(tempSvg);
+            
+            let points = [];
+            let pathLength = path.getTotalLength();
+            
+            // Sample points along the path (more samples = smoother)
+            let numSamples = Math.ceil(pathLength * scale * 0.5); // Adjust density
+            numSamples = Math.max(100, Math.min(numSamples, 1000)); // Clamp
+            
+            for (let i = 0; i <= numSamples; i++) {
+                let point = path.getPointAtLength((i / numSamples) * pathLength);
+                points.push({
+                    x: point.x * scale + offsetX,
+                    y: point.y * scale + offsetY
+                });
+            }
+            
+            document.body.removeChild(tempSvg);
+            return points;
+        }
+        
+        // ============================================
+        // PARTICLE GENERATION
+        // ============================================
+        
+        /**
+         * Generates particles within a letter's bounds using rejection sampling
+         * with spatial hashing for efficient distance checking
+         */
+        function generateParticlesForLetter(letterData) {
+            let { points, bounds } = letterData;
+            
+            if (points.length === 0) return;
+            
+            // Expand bounds generously beyond bleed amount to avoid visible box constraint
+            // The box should be much larger than particles can actually reach
+            let maxPossibleBleed = config.bleed * (1 + config.bleedRandomness * 2);
+            let expansionPadding = maxPossibleBleed * 1.5; // 50% extra padding
+            
+            let expandedBounds = {
+                minX: bounds.minX - expansionPadding,
+                maxX: bounds.maxX + expansionPadding,
+                minY: bounds.minY - expansionPadding,
+                maxY: bounds.maxY + expansionPadding
+            };
+            
+            // Calculate actual letter area more accurately using polygon area
+            let letterArea = calculatePolygonArea(points);
+            
+            // Add bleed area if enabled
+            let totalArea = letterArea;
+            if (config.bleed > 0) {
+                // Approximate bleed area as perimeter × bleed distance
+                let perimeter = calculatePerimeter(points);
+                let bleedArea = perimeter * config.bleed;
+                totalArea += bleedArea;
+            }
+            
+            // Calculate target particle count based on actual area
+            let particlesPerUnit = config.density / (config.minSpacing * config.minSpacing);
+            let targetCount = Math.floor(totalArea * particlesPerUnit);
+            
+            // Spatial hash grid for efficient nearest-neighbor checking
+            let cellSize = config.minSpacing * 2;
+            let grid = new Map();
+            
+            function getCellKey(x, y) {
+                return `${Math.floor(x / cellSize)},${Math.floor(y / cellSize)}`;
+            }
+            
+            function addToGrid(x, y, particle) {
+                let key = getCellKey(x, y);
+                if (!grid.has(key)) grid.set(key, []);
+                grid.get(key).push(particle);
+            }
+            
+            function checkMinDistance(x, y) {
+                // Check cells in 3x3 neighborhood
+                let cellX = Math.floor(x / cellSize);
+                let cellY = Math.floor(y / cellSize);
+                
+                // Dynamic spacing based on arrangement irregularity
+                // Low irregularity = strict spacing, high = more relaxed
+                let effectiveSpacing = config.minSpacing * (1 - config.arrangement * 0.3);
+                
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        let key = `${cellX + dx},${cellY + dy}`;
+                        if (grid.has(key)) {
+                            for (let p of grid.get(key)) {
+                                let d = dist(x, y, p.x, p.y);
+                                if (d < effectiveSpacing) return false;
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+            
+            // Rejection sampling with adaptive maximum attempts
+            // OPTIMIZATION: Reduce attempts for complex settings to prevent hanging
+            let attempts = 0;
+            let maxAttempts = targetCount * 30; // Reduced from 50
+            
+            // For very dense or complex settings, limit attempts further
+            if (config.density > 2.0 || config.bleedRandomness > 3.0) {
+                maxAttempts = targetCount * 20;
+            }
+            
+            let letterParticles = [];
+            let lastProgress = 0;
+            
+            while (letterParticles.length < targetCount && attempts < maxAttempts) {
+                attempts++;
+                
+                // OPTIMIZATION: Early exit if we're not making progress
+                if (attempts % 1000 === 0) {
+                    let progress = letterParticles.length;
+                    if (progress === lastProgress) {
+                        // No progress in last 1000 attempts, stop trying
+                        console.log(`Early exit: no progress. Generated ${progress}/${targetCount} particles`);
+                        break;
+                    }
+                    lastProgress = progress;
+                }
+                
+                // Generate candidate position based on arrangement irregularity
+                let x, y;
+                
+                if (config.arrangement < 0.3) {
+                    // LOW IRREGULARITY: Grid-based with slight displacement
+                    let gridSpacing = config.minSpacing * 1.5;
+                    let cols = Math.ceil((expandedBounds.maxX - expandedBounds.minX) / gridSpacing);
+                    let rows = Math.ceil((expandedBounds.maxY - expandedBounds.minY) / gridSpacing);
+                    
+                    let col = floor(random(cols));
+                    let row = floor(random(rows));
+                    
+                    x = expandedBounds.minX + col * gridSpacing;
+                    y = expandedBounds.minY + row * gridSpacing;
+                    
+                    // Small displacement for natural look
+                    let displacement = config.minSpacing * config.arrangement * 3;
+                    x += random(-displacement, displacement);
+                    y += random(-displacement, displacement);
+                    
+                } else if (config.arrangement < 0.7) {
+                    // MEDIUM IRREGULARITY: Noise-based displacement from grid
+                    let gridSpacing = config.minSpacing * 1.5;
+                    let cols = Math.ceil((expandedBounds.maxX - expandedBounds.minX) / gridSpacing);
+                    let rows = Math.ceil((expandedBounds.maxY - expandedBounds.minY) / gridSpacing);
+                    
+                    let col = floor(random(cols));
+                    let row = floor(random(rows));
+                    
+                    x = expandedBounds.minX + col * gridSpacing;
+                    y = expandedBounds.minY + row * gridSpacing;
+                    
+                    // Noise-based displacement increases with irregularity
+                    let noiseScale = 0.02;
+                    let noiseX = noise(x * noiseScale, y * noiseScale);
+                    let noiseY = noise(x * noiseScale + 1000, y * noiseScale + 1000);
+                    
+                    let maxDisplacement = config.minSpacing * config.arrangement * 4;
+                    x += (noiseX - 0.5) * maxDisplacement * 2;
+                    y += (noiseY - 0.5) * maxDisplacement * 2;
+                    
+                } else {
+                    // HIGH IRREGULARITY: Fully random
+                    x = random(expandedBounds.minX, expandedBounds.maxX);
+                    y = random(expandedBounds.minY, expandedBounds.maxY);
+                }
+                
+                // Check if point is inside letter
+                let isInside = isPointInPolygon(x, y, points);
+                
+                // Calculate distance to nearest edge
+                let distToEdge = distanceToNearestEdge(x, y, points);
+                
+                // Calculate effective bleed with TRUE randomness per particle
+                let effectiveBleed = config.bleed;
+                
+                if (config.bleedRandomness > 0 && config.bleed > 0) {
+                    // TRULY CHAOTIC: Pure random displacement per particle
+                    // No smoothing, no averaging - just raw chaos
+                    
+                    let finalRand;
+                    
+                    if (config.bleedRandomness < 0.5) {
+                        // Low randomness: Use subtle spatial noise for coherence
+                        let spatialNoise = noise(x * 0.015, y * 0.015) - 0.5;
+                        let pureRandom = random() - 0.5;
+                        finalRand = pureRandom * config.bleedRandomness * 2 + spatialNoise * (1 - config.bleedRandomness * 2);
+                    } else {
+                        // High randomness: Pure chaos with extreme spikes
+                        // Each particle completely independent
+                        
+                        // Use power distribution for more extremes
+                        let r = random();
+                        let sign = random() < 0.5 ? -1 : 1;
+                        
+                        // Power function creates more extreme values
+                        finalRand = sign * Math.pow(r, 0.7); // More values near extremes
+                        
+                        // Add occasional mega-spikes
+                        if (random() < 0.08) {
+                            finalRand *= 1.5 + random() * config.bleedRandomness;
+                        }
+                        
+                        // At very high randomness, add complete outliers
+                        if (config.bleedRandomness > 1.2 && random() < 0.05) {
+                            finalRand *= 2.5; // Extreme outlier
+                        }
+                    }
+                    
+                    // Calculate displacement - scales with randomness
+                    let displacementRange = config.bleed * config.bleedRandomness;
+                    let displacement = finalRand * displacementRange * 2.5;
+                    
+                    effectiveBleed = config.bleed + displacement;
+                    effectiveBleed = Math.max(0, effectiveBleed);
+                }
+                
+                // If bleed is enabled, allow particles outside with distance check
+                if (config.bleed > 0) {
+                    if (isInside) {
+                        // Inside the letter - apply edge softness
+                        if (config.edgeSoftness > 0 && distToEdge < config.edgeSoftness) {
+                            let probability = distToEdge / config.edgeSoftness;
+                            if (random() > probability) continue;
+                        }
+                    } else {
+                        // Outside the letter - check against effective bleed distance
+                        if (distToEdge > effectiveBleed) continue;
+                        
+                        // Probability decreases with distance
+                        let probability = 1 - (distToEdge / effectiveBleed);
+                        probability = Math.pow(probability, 1.5); // Falloff
+                        
+                        if (random() > probability) continue;
+                    }
+                } else {
+                    // No bleed - must be inside letter
+                    if (!isInside) continue;
+                    
+                    // Apply edge softness for inside particles
+                    if (config.edgeSoftness > 0 && distToEdge < config.edgeSoftness) {
+                        let probability = distToEdge / config.edgeSoftness;
+                        if (random() > probability) continue;
+                    }
+                }
+                
+                // Check minimum spacing constraint
+                if (!checkMinDistance(x, y)) continue;
+                
+                // Create particle with variation
+                let particle = createParticle(x, y);
+                letterParticles.push(particle);
+                addToGrid(x, y, particle);
+            }
+            
+            // Add to global particles array
+            particles.push(...letterParticles);
+        }
+        
+        /**
+         * Generate particles for the background (invert mode)
+         * Letters act as exclusion zones - no particles inside them
+         */
+        function generateBackgroundParticles() {
+            // Calculate total canvas area
+            let canvasArea = width * height;
+            
+            // Calculate target particle count for canvas
+            let particlesPerUnit = config.density / (config.minSpacing * config.minSpacing);
+            let targetCount = Math.floor(canvasArea * particlesPerUnit);
+            
+            // Spatial hash grid for efficient nearest-neighbor checking
+            let cellSize = config.minSpacing * 2;
+            let grid = new Map();
+            
+            function getCellKey(x, y) {
+                return `${Math.floor(x / cellSize)},${Math.floor(y / cellSize)}`;
+            }
+            
+            function addToGrid(x, y, particle) {
+                let key = getCellKey(x, y);
+                if (!grid.has(key)) grid.set(key, []);
+                grid.get(key).push(particle);
+            }
+            
+            function checkMinDistance(x, y) {
+                let cellX = Math.floor(x / cellSize);
+                let cellY = Math.floor(y / cellSize);
+                let effectiveSpacing = config.minSpacing * (1 - config.arrangement * 0.3);
+                
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        let key = `${cellX + dx},${cellY + dy}`;
+                        if (grid.has(key)) {
+                            for (let p of grid.get(key)) {
+                                let d = dist(x, y, p.x, p.y);
+                                if (d < effectiveSpacing) return false;
+                            }
+                        }
+                    }
+                }
+                return true;
+            }
+            
+            let attempts = 0;
+            let maxAttempts = targetCount * 50;
+            let backgroundParticles = [];
+            
+            while (backgroundParticles.length < targetCount && attempts < maxAttempts) {
+                attempts++;
+                
+                // Generate random position across entire canvas
+                let x, y;
+                
+                if (config.arrangement < 0.3) {
+                    // Grid-based
+                    let gridSpacing = config.minSpacing * 1.5;
+                    let cols = Math.ceil(width / gridSpacing);
+                    let rows = Math.ceil(height / gridSpacing);
+                    let col = floor(random(cols));
+                    let row = floor(random(rows));
+                    x = col * gridSpacing + random(-gridSpacing * 0.3, gridSpacing * 0.3);
+                    y = row * gridSpacing + random(-gridSpacing * 0.3, gridSpacing * 0.3);
+                } else {
+                    // Random
+                    x = random(0, width);
+                    y = random(0, height);
+                }
+                
+                // Check if point is inside ANY letter - if so, reject it
+                let isInsideAnyLetter = false;
+                for (let letterData of letterBounds) {
+                    if (isPointInPolygon(x, y, letterData.points)) {
+                        isInsideAnyLetter = true;
+                        break;
+                    }
+                }
+                
+                // Reject if inside any letter (we want background only)
+                if (isInsideAnyLetter) continue;
+                
+                // Check spacing
+                if (!checkMinDistance(x, y)) continue;
+                
+                // Create particle
+                let particle = createParticle(x, y);
+                backgroundParticles.push(particle);
+                addToGrid(x, y, particle);
+            }
+            
+            console.log(`Generated ${backgroundParticles.length} background particles`);
+            particles.push(...backgroundParticles);
+        }
+        
+        /**
+         * Creates a particle object with randomized properties
+         */
+        function createParticle(x, y) {
+            // Size variation: sizeVariation controls the range of variation
+            // 0 = no variation, 1 = can vary from 0% to 200% of base size
+            let sizeMultiplier = 1 + (random(-1, 1) * config.sizeVariation);
+            let size = config.particleSize * sizeMultiplier;
+            
+            // Random rotation for all particle types
+            let rotation = random(TWO_PI);
+            
+            // Determine particle type
+            let type = config.particleType;
+            if (type === 'mixed') {
+                type = random(['dots', 'lines', 'rectangles', 'polygons']);
+            }
+            
+            // Opacity variation for visual interest
+            let opacity = random(200, 255);
+            
+            // Color selection based on ratio
+            // If dual color is enabled, use ratio to decide which color
+            let particleColor;
+            if (config.useDualColor) {
+                // Random value 0-100, compare with ratio
+                // If random > ratio, use Color B, otherwise use Color A
+                let randomValue = random(100);
+                particleColor = randomValue > config.colorRatio ? config.colorB : config.colorA;
+            } else {
+                particleColor = config.colorA;
+            }
+            
+            // Additional properties based on type
+            let props = {};
+            
+            if (type === 'lines') {
+                // Line length proportional to particle size with variation
+                props.length = size * random(2.5, 4.5);
+            } else if (type === 'polygons') {
+                props.sides = floor(random(3, 7));
+            }
+            
+            return {
+                x: x,
+                y: y,
+                size: size,
+                rotation: rotation,
+                type: type,
+                opacity: opacity,
+                color: particleColor,
+                ...props
+            };
+        }
+        
+        // ============================================
+        // GEOMETRIC UTILITIES
+        // ============================================
+        
+        /**
+         * Ray casting algorithm to determine if point is inside polygon
+         */
+        function isPointInPolygon(x, y, points) {
+            let inside = false;
+            for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+                let xi = points[i].x, yi = points[i].y;
+                let xj = points[j].x, yj = points[j].y;
+                
+                let intersect = ((yi > y) !== (yj > y))
+                    && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+        
+        /**
+         * Calculate the area of a polygon using the shoelace formula
+         */
+        function calculatePolygonArea(points) {
+            let area = 0;
+            for (let i = 0; i < points.length; i++) {
+                let j = (i + 1) % points.length;
+                area += points[i].x * points[j].y;
+                area -= points[j].x * points[i].y;
+            }
+            return Math.abs(area / 2);
+        }
+        
+        /**
+         * Calculate the perimeter of a polygon
+         */
+        function calculatePerimeter(points) {
+            let perimeter = 0;
+            for (let i = 0; i < points.length; i++) {
+                let j = (i + 1) % points.length;
+                let dx = points[j].x - points[i].x;
+                let dy = points[j].y - points[i].y;
+                perimeter += Math.sqrt(dx * dx + dy * dy);
+            }
+            return perimeter;
+        }
+        
+        /**
+         * Calculates approximate distance to nearest edge
+         * Used for edge softness and bleed effects
+         * OPTIMIZED: Only samples subset of segments for performance
+         */
+        function distanceToNearestEdge(x, y, points) {
+            let minDist = Infinity;
+            
+            // Check more segments for better accuracy with detailed outlines
+            // Balance between accuracy and performance
+            let step = Math.max(1, Math.floor(points.length / 50)); // Check up to 50 segments (increased from 30)
+            
+            for (let i = 0; i < points.length; i += step) {
+                let p1 = points[i];
+                let p2 = points[(i + 1) % points.length];
+                
+                // Distance from point to line segment
+                let d = distToSegment(x, y, p1.x, p1.y, p2.x, p2.y);
+                if (d < minDist) minDist = d;
+            }
+            
+            return minDist;
+        }
+        
+        /**
+         * Calculate distance from point (x,y) to line segment (x1,y1)-(x2,y2)
+         */
+        function distToSegment(x, y, x1, y1, x2, y2) {
+            let dx = x2 - x1;
+            let dy = y2 - y1;
+            let l2 = dx * dx + dy * dy;
+            
+            if (l2 === 0) return dist(x, y, x1, y1);
+            
+            let t = ((x - x1) * dx + (y - y1) * dy) / l2;
+            t = Math.max(0, Math.min(1, t));
+            
+            let px = x1 + t * dx;
+            let py = y1 + t * dy;
+            
+            return dist(x, y, px, py);
+        }
+        
+        // ============================================
+        // RENDERING
+        // ============================================
+        
+        /**
+         * Renders all particles to canvas
+         */
+        function renderParticles() {
+            noStroke();
+            
+            for (let p of particles) {
+                push();
+                translate(p.x, p.y);
+                rotate(p.rotation);
+                
+                // Use the particle's own color
+                let col = color(p.color);
+                fill(red(col), green(col), blue(col), p.opacity);
+                
+                switch(p.type) {
+                    case 'dots':
+                        circle(0, 0, p.size);
+                        break;
+                        
+                    case 'lines':
+                        strokeWeight(p.size * 0.4);
+                        let col = color(p.color); stroke(red(col), green(col), blue(col), p.opacity);
+                        line(-p.length / 2, 0, p.length / 2, 0);
+                        noStroke();
+                        break;
+                        
+                    case 'rectangles':
+                        let w = p.size * (0.8 + random() * 0.7);
+                        let h = p.size * (0.8 + random() * 0.7);
+                        rect(-w/2, -h/2, w, h);
+                        break;
+                        
+                    case 'polygons':
+                        drawPolygon(0, 0, p.size, p.sides);
+                        break;
+                }
+                
+                pop();
+            }
+        }
+        
+        /**
+         * Draws a regular polygon
+         */
+        function drawPolygon(x, y, radius, sides) {
+            beginShape();
+            for (let i = 0; i < sides; i++) {
+                let angle = TWO_PI / sides * i - HALF_PI;
+                let vx = x + cos(angle) * radius;
+                let vy = y + sin(angle) * radius;
+                vertex(vx, vy);
+            }
+            endShape(CLOSE);
+        }
+        
+        // ============================================
+        // EXPORT HIGH QUALITY
+  // ============================================
+        
+        // High quality export function - creates ultra high-res screenshot
+        function exportHighQuality() {
+            console.log('Exporting at 5x resolution (ultra high-res screenshot)...');
+            
+            // Create a new high-resolution canvas
+            let scale = 5; // 5x resolution for ultra high quality
+            let exportCanvas = document.createElement('canvas');
+            exportCanvas.width = width * scale;
+            exportCanvas.height = height * scale;
+            let ctx = exportCanvas.getContext('2d');
+            
+            // Scale the context
+            ctx.scale(scale, scale);
+            
+            // Draw background
+            ctx.fillStyle = config.bgColor;
+            ctx.fillRect(0, 0, width, height);
+            
+            // Draw letter outlines if enabled
+            if (config.showOutline) {
+                ctx.strokeStyle = 'rgba(200, 200, 200, 1)';
+                ctx.lineWidth = 1 / scale; // Adjust line width for scale
+                ctx.fillStyle = 'none';
+                
+                for (let letterData of letterBounds) {
+                    ctx.beginPath();
+                    let points = letterData.points;
+                    if (points.length > 0) {
+                        ctx.moveTo(points[0].x, points[0].y);
+                        for (let i = 1; i < points.length; i++) {
+                            ctx.lineTo(points[i].x, points[i].y);
+                        }
+                        ctx.closePath();
+                    }
+                    ctx.stroke();
+                }
+            }
+            
+            // Draw all particles
+            for (let p of particles) {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rotation);
+                
+                // Extract RGB from color
+                let c = color(p.color);
+                ctx.fillStyle = `rgba(${red(c)}, ${green(c)}, ${blue(c)}, ${p.opacity / 255})`;
+                
+                switch(p.type) {
+                    case 'dots':
+                        ctx.beginPath();
+                        ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+                        ctx.fill();
+                        break;
+                        
+                    case 'lines':
+                        ctx.strokeStyle = `rgba(${red(c)}, ${green(c)}, ${blue(c)}, ${p.opacity / 255})`;
+                        ctx.lineWidth = p.size * 0.4;
+                        ctx.beginPath();
+                        ctx.moveTo(-p.length / 2, 0);
+                        ctx.lineTo(p.length / 2, 0);
+                        ctx.stroke();
+                        break;
+                        
+                    case 'rectangles':
+                        let w = p.size * (0.8 + Math.random() * 0.7);
+                        let h = p.size * (0.8 + Math.random() * 0.7);
+                        ctx.fillRect(-w/2, -h/2, w, h);
+                        break;
+                        
+                    case 'polygons':
+                        ctx.beginPath();
+                        for (let i = 0; i < p.sides; i++) {
+                            let angle = (Math.PI * 2 / p.sides) * i - Math.PI / 2;
+                            let px = Math.cos(angle) * p.size;
+                            let py = Math.sin(angle) * p.size;
+                            if (i === 0) ctx.moveTo(px, py);
+                            else ctx.lineTo(px, py);
+                        }
+                        ctx.closePath();
+                        ctx.fill();
+                        break;
+                }
+                
+                ctx.restore();
+            }
+            
+            // Convert to blob and download
+            exportCanvas.toBlob((blob) => {
+                let url = URL.createObjectURL(blob);
+                let link = document.createElement('a');
+                link.download = 'generative_typography_hq.png';
+                link.href = url;
+                link.click();
+                URL.revokeObjectURL(url);
+                console.log('Export complete!');
+            }, 'image/png');
+        }
+    </script>
+</body>
+</html>

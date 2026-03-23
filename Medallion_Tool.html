@@ -1,0 +1,1091 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Persian Rosace Patterns</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300;400;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Martian Mono', monospace !important;
+        }
+        
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            padding: 20px;
+        }
+        
+        #canvas-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            border-radius: 12px;
+            border: 1px solid #222;
+        }
+        
+        #canvas-container canvas {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        #gui-panel {
+            background: #111;
+            width: 420px;
+            height: 100%;
+            overflow: hidden;
+            border: 1px solid #222;
+            margin-left: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #gui-panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            padding-bottom: 10px;
+        }
+        
+        #gui-panel-content::-webkit-scrollbar {
+            display: none;
+        }
+        
+        #gui-panel-footer {
+            background: #111;
+            border-top: 1px solid #222;
+            padding: 20px 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .gui-main-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        
+        .gui-section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #222;
+        }
+        
+        .section-title {
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #fff;
+        }
+        
+        .control-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-bottom: 14px;
+        }
+        
+        .control-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 300;
+        }
+        
+        .slider-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .gui-slider {
+            width: 100%;
+            accent-color: #fff;
+            cursor: pointer;
+        }
+        
+        .slider-value {
+            color: #fff;
+            font-weight: 700;
+            font-size: 10px;
+            min-width: 30px;
+            text-align: right;
+        }
+        
+        .gui-input, .gui-select {
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            outline: none;
+        }
+        
+        .gui-select {
+            cursor: pointer;
+        }
+        
+        .color-wheel {
+            width: 100%;
+            height: 35px;
+            border: 1px solid #333;
+            cursor: pointer;
+            background: #1a1a1a;
+            border-radius: 6px;
+        }
+        
+        .button-grid {
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+            justify-content: center;
+        }
+        
+        .export-button {
+            width: 100%;
+            flex: 1;
+            background: #fff;
+            color: #000;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            margin-top: 0;
+            transition: background 0.2s;
+            height: auto;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .export-button:hover {
+            background: #e0e0e0;
+        }
+        
+        .export-button:hover {
+            background: #e0e0e0;
+        }
+        
+        .gui-button {
+            width: 100%;
+            background: #1a1a1a;
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: 700;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .gui-button:hover {
+            background: #222;
+        }
+        
+        .gui-button.active {
+            background: #fff;
+            color: #000;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .gui-checkbox {
+            width: 16px;
+            height: 16px;
+            border: 1px solid #333;
+            border-radius: 2px;
+            background: #1a1a1a;
+            cursor: pointer;
+            appearance: none;
+            margin-right: 8px;
+        }
+        
+        .gui-checkbox:checked {
+            background: #fff;
+            position: relative;
+        }
+        
+        .gui-checkbox:checked::after {
+            content: '✓';
+            color: #000;
+            font-size: 12px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .checkbox-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        
+        .pattern-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .pattern-btn {
+            padding: 8px 12px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: inherit;
+            font-size: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .pattern-btn:hover {
+            background: #222;
+        }
+        
+        .pattern-btn.active {
+            background: #fff;
+            color: #000;
+        }
+        
+        .status-display {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 6px;
+            padding: 12px;
+            font-size: 10px;
+            line-height: 1.6;
+        }
+        
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+            color: #fff;
+        }
+        
+        .status-item span:first-child {
+            color: #888;
+        }
+        
+        .file-upload {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+        
+        .file-upload input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        .file-upload-label {
+            display: block;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background: #1a1a1a;
+            color: #fff;
+            font-family: inherit;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        
+        .file-upload-label:hover {
+            background: #222;
+        }
+        
+        .drop-zone {
+            border: 2px dashed #444;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+            margin: 8px 0;
+            background: #161616;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            font-size: 10px;
+            color: #888;
+        }
+        
+        .drop-zone.dragover {
+            border-color: #666;
+            background: #1a1a1a;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div id="gui-panel">
+        <div id="gui-panel-content"></div>
+        <div id="gui-panel-footer"></div>
+    </div>
+    <script>
+        // Global variables
+        let t = 0;
+        let dt = 0.002;
+        let prevX, prevY;
+        let bgColor;
+        let drawingColor;
+        let currentVariation = 0;
+        let isDrawing = false;
+        let maxT;
+        let leafImage;
+        let useLeaf = false;
+        let leafSize = 20;
+        let leafStartOffset = 0;
+        let leafSpacing = 0.5;
+        let totalLeaves = 60;
+        let leafCounter = 0;
+        let leavesPerSecond = 5;
+        let lastLeafTime = 0;
+        let leafInterval = 1000 / leavesPerSecond;
+        let drawnLeaves = [];
+        let useTimeBased = true;
+        
+        // Cayley's sextic variations with proper mathematical nomenclature
+        const variations = [
+            // Original and classic variations
+            ["Cayley Sextic", "cayley", 1/1.4, 7, 1/3, 30, 0, 6],
+            ["Hexagonal Epicycloid", "cayley", 0.8, 6, 0.5, 18, 0, 6],
+            ["Octagonal Epitrochoid", "cayley", 0.7, 8, 0.4, 24, 0, 8],
+            ["Decagonal Hypotrochoid", "cayley", 0.6, 10, 0.3, 30, 0, 10],
+            ["Dodecagonal Rosette", "cayley", 0.5, 12, 0.25, 36, 0, 12],
+            
+            // Mathematical frequency relationships
+            ["Trifolium", "cayley", 0.6, 3, 0.4, 9, 0, 3],
+            ["Pentagonal Rose", "cayley", 0.8, 5, 0.6, 15, 0, 5],
+            ["Heptagonal Rhodonea", "cayley", 0.7, 7, 0.5, 21, 0, 7],
+            ["Enneagonal Curve", "cayley", 0.65, 9, 0.45, 27, 0, 9],
+            ["Hendecagonal Cycloid", "cayley", 0.55, 11, 0.35, 33, 0, 11],
+            
+            // Phase-shifted geometric variations
+            ["Rotated Hexagonal Trochoid", "cayley", 0.8, 6, 0.5, 18, Math.PI/6, 6],
+            ["Phase-Shifted Octoid", "cayley", 0.7, 8, 0.4, 24, Math.PI/8, 8],
+            ["Decagonal Spirograph", "cayley", 0.6, 10, 0.3, 30, Math.PI/10, 10],
+            ["Rotated Dodecoid", "cayley", 0.5, 12, 0.25, 36, Math.PI/12, 12],
+            ["Tetradecagonal Roulette", "cayley", 0.45, 14, 0.35, 42, Math.PI/14, 14],
+            
+            // Amplitude-modulated parametric curves
+            ["Low-Amplitude Hexacycloid", "cayley", 0.3, 6, 0.7, 18, 0, 6],
+            ["High-Amplitude Octocycloid", "cayley", 0.9, 8, 0.2, 24, 0, 8],
+            ["Extended Decacycloid", "cayley", 1.2, 10, 0.1, 30, 0, 10],
+            ["Compressed Dodecacycloid", "cayley", 0.2, 12, 0.8, 36, 0, 12],
+            ["Balanced Tetradecacycloid", "cayley", 0.6, 14, 0.4, 42, 0, 14],
+            
+            // Golden ratio geometric forms
+            ["Phi-Ratio Hexagonal", "cayley", 0.618, 6, 0.382, 18, 0, 6],
+            ["Golden Octagonal", "cayley", 0.382, 8, 0.618, 24, 0, 8],
+            ["Phi-Modulated Decagon", "cayley", 0.618, 10, 0.236, 30, 0, 10],
+            ["Aurea Dodecagon", "cayley", 0.382, 12, 0.618, 36, 0, 12],
+            
+            // Harmonic ratio curves
+            ["Quint Harmonic Curve", "cayley", 0.667, 6, 0.4, 9, 0, 6],
+            ["Major Third Trochoid", "cayley", 0.8, 8, 0.32, 10, 0, 8],
+            ["Perfect Fourth Cycloid", "cayley", 0.75, 9, 0.5, 12, 0, 9],
+            ["Seventh Interval Curve", "cayley", 0.562, 16, 0.316, 9, 0, 16]
+        ];
+
+        function createLeafShape() {
+            leafImage = createGraphics(40, 20);
+            leafImage.fill(34, 139, 34);
+            leafImage.stroke(20, 100, 20);
+            leafImage.strokeWeight(1);
+            
+            leafImage.beginShape();
+            leafImage.vertex(0, 10);
+            leafImage.bezierVertex(5, 0, 15, 0, 20, 10);
+            leafImage.bezierVertex(15, 20, 5, 20, 0, 10);
+            leafImage.endShape(CLOSE);
+            
+            leafImage.stroke(20, 80, 20);
+            leafImage.line(0, 10, 20, 10);
+        }
+
+        function setup() {
+            let canvas = createCanvas(1000, 800);
+            canvas.parent('canvas-container');
+            
+            angleMode(RADIANS);
+            bgColor = color('#e1d5ba');
+            drawingColor = color('#43231a');
+            maxT = TWO_PI * 8;
+            
+            createLeafShape();
+            resetDrawing();
+            createGui();
+        }
+
+        function calculatePoint(t, variation) {
+            let [name, type, p1, p2, p3, p4, phase, symmetry] = variation;
+            let x, y;
+            
+            // All patterns use Cayley's sextic formula
+            x = cos(t) + p1 * cos(p2 * t) + p3 * sin(p4 * t + phase);
+            y = sin(t) + p1 * sin(p2 * t) + p3 * cos(p4 * t + phase);
+            
+            return [x, y];
+        }
+
+        function createGui() {
+            const panel = document.getElementById('gui-panel-content');
+            const footer = document.getElementById('gui-panel-footer');
+            panel.innerHTML = '';
+            footer.innerHTML = '';
+            
+            const mainGrid = document.createElement('div');
+            mainGrid.className = 'gui-main-grid';
+            panel.appendChild(mainGrid);
+            
+            // Drawing Controls
+            const drawingSection = createSection('Drawing Controls', mainGrid);
+            const drawingGrid = document.createElement('div');
+            drawingGrid.className = 'button-grid';
+            drawingGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            drawingGrid.style.display = 'grid';
+            drawingSection.appendChild(drawingGrid);
+            
+            addButton(drawingGrid, 'Line Mode', () => setMode('line'), 'line-mode');
+            addButton(drawingGrid, 'Leaf Mode', () => setMode('leaf'), 'leaf-mode');
+            
+            // Leaf Image Upload (only visible in leaf mode)
+            const fileSection = createSection('Leaf Image/SVG Upload', mainGrid);
+            fileSection.id = 'leaf-upload-section';
+            fileSection.style.display = 'none'; // Hidden by default
+            
+            const uploadDiv = document.createElement('div');
+            uploadDiv.className = 'control-group';
+            uploadDiv.innerHTML = `
+                <div class="file-upload">
+                    <input type="file" id="file-input" accept="image/*,.svg">
+                    <label for="file-input" class="file-upload-label">Upload Leaf Image or SVG</label>
+                </div>
+                <div class="drop-zone" id="drop-zone">Or drop image/SVG here</div>
+            `;
+            fileSection.appendChild(uploadDiv);
+            
+            // Timing Mode (only visible in leaf mode)
+            const timingSection = createSection('Timing Mode', mainGrid);
+            timingSection.id = 'timing-section';
+            timingSection.style.display = 'none'; // Hidden by default
+            const timingGrid = document.createElement('div');
+            timingGrid.className = 'button-grid';
+            timingGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+            timingGrid.style.display = 'grid';
+            timingSection.appendChild(timingGrid);
+            
+            addButton(timingGrid, 'Time-based', () => setTimingMode('time'), 'time-mode');
+            addButton(timingGrid, 'Distance-based', () => setTimingMode('distance'), 'distance-mode');
+            
+            // Leaf Settings (only visible in leaf mode)
+            const leafSection = createSection('Leaf Settings', mainGrid);
+            leafSection.id = 'leaf-settings-section';
+            leafSection.style.display = 'none'; // Hidden by default
+            const leafGrid = document.createElement('div');
+            leafGrid.className = 'control-grid';
+            leafSection.appendChild(leafGrid);
+            
+            addSlider(leafGrid, 'leafSize', 'Leaf Size', 10, 50, 1);
+            addSlider(leafGrid, 'totalLeaves', 'Total Leaves', 20, 120, 10);
+            addSlider(leafGrid, 'leavesPerSecond', 'Leaves/Second', 1, 20, 1);
+            addSlider(leafGrid, 'leafStartOffset', 'Start Offset', 0, 10, 0.5);
+            
+            // Pattern Selection
+            const patternSection = createSection('Pattern Selection', mainGrid);
+            const patternGrid = document.createElement('div');
+            patternGrid.className = 'pattern-grid';
+            patternGrid.id = 'pattern-grid';
+            patternSection.appendChild(patternGrid);
+            
+            populatePatterns();
+            
+            // Status Display
+            const statusSection = createSection('Status', mainGrid);
+            const statusDisplay = document.createElement('div');
+            statusDisplay.className = 'status-display';
+            statusDisplay.innerHTML = `
+                <div class="status-item">
+                    <span>Status:</span>
+                    <span id="drawing-status">Ready</span>
+                </div>
+                <div class="status-item">
+                    <span>Leaves Drawn:</span>
+                    <span id="leaves-drawn">0</span>
+                </div>
+                <div class="status-item">
+                    <span>Current Pattern:</span>
+                    <span id="current-pattern">Original</span>
+                </div>
+                <div class="status-item">
+                    <span>Mode:</span>
+                    <span id="current-mode">Line</span>
+                </div>
+                <div class="status-item">
+                    <span>Timing:</span>
+                    <span id="timing-mode">Time-based</span>
+                </div>
+            `;
+            statusSection.appendChild(statusDisplay);
+            
+            // FOOTER - Export Controls
+            const exportTopRow = document.createElement('div');
+            exportTopRow.className = 'button-grid';
+            footer.appendChild(exportTopRow);
+            
+            const resetBtn = document.createElement('button');
+            resetBtn.className = 'export-button';
+            resetBtn.textContent = 'Reset Drawing';
+            resetBtn.onclick = resetDrawing;
+            exportTopRow.appendChild(resetBtn);
+            
+            const playBtn = document.createElement('button');
+            playBtn.className = 'export-button';
+            playBtn.innerHTML = '||';
+            playBtn.id = 'playButton';
+            playBtn.style.fontWeight = '800';
+            playBtn.style.fontSize = '16px';
+            playBtn.onclick = () => {
+                isDrawing = !isDrawing;
+                playBtn.innerHTML = isDrawing ? '||' : '▶';
+            };
+            exportTopRow.appendChild(playBtn);
+            
+            const exportBottomRow = document.createElement('div');
+            exportBottomRow.style.display = 'flex';
+            footer.appendChild(exportBottomRow);
+            
+            const saveBtn = document.createElement('button');
+            saveBtn.className = 'export-button';
+            saveBtn.textContent = 'Save Image';
+            saveBtn.onclick = saveImage;
+            exportBottomRow.appendChild(saveBtn);
+            
+            setupEventListeners();
+            updateUI();
+        }
+
+        function createSection(title, parent) {
+            const section = document.createElement('div');
+            section.className = 'gui-section';
+            
+            const titleElement = document.createElement('div');
+            titleElement.className = 'section-title';
+            titleElement.textContent = title;
+            section.appendChild(titleElement);
+            
+            parent.appendChild(section);
+            return section;
+        }
+
+        function addSlider(parent, key, label, min, max, step) {
+            const group = document.createElement('div');
+            group.className = 'control-group';
+            
+            const labelElement = document.createElement('div');
+            labelElement.className = 'control-label';
+            labelElement.textContent = label;
+            group.appendChild(labelElement);
+            
+            const sliderContainer = document.createElement('div');
+            sliderContainer.className = 'slider-container';
+            
+            const slider = document.createElement('input');
+            slider.type = 'range';
+            slider.className = 'gui-slider';
+            slider.min = min;
+            slider.max = max;
+            slider.step = step;
+            slider.value = eval(key); // Get current value from global variable
+            
+            const valueDisplay = document.createElement('div');
+            valueDisplay.className = 'slider-value';
+            valueDisplay.textContent = eval(key).toFixed(step < 1 ? 2 : 0);
+            
+            slider.addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                window[key] = value; // Update global variable
+                valueDisplay.textContent = value.toFixed(step < 1 ? 2 : 0);
+                
+                // Special handling for certain values
+                if (key === 'totalLeaves' || key === 'leafStartOffset') {
+                    resetDrawing();
+                }
+                if (key === 'leavesPerSecond') {
+                    leafInterval = 1000 / value;
+                }
+            });
+            
+            sliderContainer.appendChild(slider);
+            sliderContainer.appendChild(valueDisplay);
+            group.appendChild(sliderContainer);
+            parent.appendChild(group);
+        }
+
+        function addButton(parent, text, callback, id = null) {
+            const button = document.createElement('button');
+            button.className = 'gui-button';
+            button.textContent = text;
+            if (id) button.id = id;
+            button.addEventListener('click', callback);
+            parent.appendChild(button);
+        }
+
+        function populatePatterns() {
+            const grid = document.getElementById('pattern-grid');
+            variations.forEach((pattern, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'pattern-btn';
+                btn.textContent = `${index}: ${pattern[0]}`;
+                btn.onclick = () => startPattern(index);
+                if (index === 0) btn.classList.add('active');
+                grid.appendChild(btn);
+            });
+        }
+
+        function setupEventListeners() {
+            const fileInput = document.getElementById('file-input');
+            const dropZone = document.getElementById('drop-zone');
+            
+            if (fileInput) {
+                fileInput.addEventListener('change', (e) => {
+                    if (e.target.files.length > 0) {
+                        handleFileUpload(e.target.files[0]);
+                    }
+                });
+            }
+            
+            if (dropZone) {
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.add('dragover');
+                });
+                
+                dropZone.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('dragover');
+                });
+                
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.classList.remove('dragover');
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        handleFileUpload(files[0]);
+                    }
+                });
+            }
+        }
+
+        function handleFileUpload(file) {
+            if (!file) return;
+            
+            const isSvg = file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+            
+            if (isSvg) {
+                // Handle SVG file
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const svgText = e.target.result;
+                    const parser = new DOMParser();
+                    const svgDoc = parser.parseFromString(svgText, 'image/svg+xml');
+                    const svgElement = svgDoc.querySelector('svg');
+                    
+                    if (svgElement) {
+                        // Get SVG dimensions
+                        let width = parseFloat(svgElement.getAttribute('width')) || 100;
+                        let height = parseFloat(svgElement.getAttribute('height')) || 100;
+                        
+                        // Check for viewBox if width/height not specified
+                        const viewBox = svgElement.getAttribute('viewBox');
+                        if (viewBox && (!svgElement.getAttribute('width') || !svgElement.getAttribute('height'))) {
+                            const parts = viewBox.split(/\s+|,/);
+                            width = parseFloat(parts[2]) || 100;
+                            height = parseFloat(parts[3]) || 100;
+                        }
+                        
+                        // Create a data URL from the SVG
+                        const svgBlob = new Blob([svgText], {type: 'image/svg+xml'});
+                        const url = URL.createObjectURL(svgBlob);
+                        
+                        const img = new Image();
+                        img.onload = function() {
+                            let scale = Math.min(100/width, 50/height, 1);
+                            let w = width * scale;
+                            let h = height * scale;
+                            
+                            leafImage = createGraphics(w, h);
+                            leafImage.drawingContext.drawImage(this, 0, 0, w, h);
+                            
+                            useLeaf = true;
+                            setMode('leaf');
+                            resetDrawing();
+                            
+                            URL.revokeObjectURL(url);
+                        };
+                        img.src = url;
+                    }
+                };
+                reader.readAsText(file);
+            } else if (file.type.startsWith('image/')) {
+                // Handle regular image file
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        let scale = Math.min(100/this.width, 50/this.height, 1);
+                        let w = this.width * scale;
+                        let h = this.height * scale;
+                        
+                        leafImage = createGraphics(w, h);
+                        leafImage.drawingContext.drawImage(this, 0, 0, w, h);
+                        
+                        useLeaf = true;
+                        setMode('leaf');
+                        resetDrawing();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function draw() {
+            if (isDrawing) {
+                push();
+                translate(width / 2, height / 2);
+                
+                let variation = variations[currentVariation];
+                let [x, y] = calculatePoint(t, variation);
+                
+                let scaleFactor = 140;
+                let drawX = x * scaleFactor;
+                let drawY = y * scaleFactor;
+                
+                if (frameCount > 2) {
+                    if (useLeaf && leafImage) {
+                        let adjustedT = t - leafStartOffset;
+                        
+                        if (useTimeBased) {
+                            let currentTime = millis();
+                            if (adjustedT > 0 && currentTime - lastLeafTime >= leafInterval && drawnLeaves.length < totalLeaves) {
+                                let angle = atan2(drawY - prevY, drawX - prevX);
+                                drawnLeaves.push({
+                                    x: drawX,
+                                    y: drawY,
+                                    angle: angle
+                                });
+                                lastLeafTime = currentTime;
+                            }
+                        } else {
+                            if (adjustedT > 0) {
+                                let leafPosition = (adjustedT / maxT) * totalLeaves;
+                                let currentLeafIndex = Math.floor(leafPosition);
+                                
+                                if (currentLeafIndex > leafCounter && currentLeafIndex < totalLeaves) {
+                                    let angle = atan2(drawY - prevY, drawX - prevX);
+                                    drawnLeaves.push({
+                                        x: drawX,
+                                        y: drawY,
+                                        angle: angle
+                                    });
+                                    leafCounter = currentLeafIndex;
+                                }
+                            }
+                        }
+                        
+                        for (let leaf of drawnLeaves) {
+                            push();
+                            translate(leaf.x, leaf.y);
+                            rotate(leaf.angle);
+                            image(leafImage, -leafSize/2, -leafSize/4, leafSize, leafSize/2);
+                            pop();
+                        }
+                        
+                        stroke(100, 150, 100, 80);
+                        strokeWeight(0.3);
+                        line(prevX, prevY, drawX, drawY);
+                    } else {
+                        stroke(drawingColor);
+                        strokeWeight(1.5);
+                        noFill();
+                        line(prevX, prevY, drawX, drawY);
+                    }
+                }
+                
+                prevX = drawX;
+                prevY = drawY;
+                t += dt * 5;
+                
+                if (t > maxT) {
+                    isDrawing = false;
+                    updateUI();
+                }
+                
+                pop();
+            }
+            
+            updateStatus();
+        }
+
+        function startPattern(index) {
+            currentVariation = index;
+            let variation = variations[currentVariation];
+            maxT = TWO_PI * 8;
+            
+            resetDrawing();
+            isDrawing = true;
+            updatePatternButtons();
+            updateUI();
+        }
+
+        function resetDrawing() {
+            t = 0;
+            leafCounter = 0;
+            drawnLeaves = [];
+            lastLeafTime = 0;
+            
+            let variation = variations[currentVariation];
+            let [x, y] = calculatePoint(0, variation);
+            let scaleFactor = 140;
+            prevX = x * scaleFactor;
+            prevY = y * scaleFactor;
+            background(bgColor);
+            isDrawing = false;
+            updateUI();
+        }
+
+        function saveImage() {
+            let filename = `rosace_${variations[currentVariation][0].replace(/\s+/g, '_')}`;
+            saveSVG(filename);
+        }
+
+        function saveSVG(filename) {
+            // Create SVG content
+            let svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">
+<rect width="100%" height="100%" fill="#e1d5ba"/>
+<g transform="translate(${width/2}, ${height/2})">
+`;
+            
+            if (useLeaf) {
+                // For leaf mode, export only the leaves using the actual drawn leaves array
+                drawnLeaves.forEach(leaf => {
+                    let cos_a = Math.cos(leaf.angle);
+                    let sin_a = Math.sin(leaf.angle);
+                    let halfSize = leafSize / 2;
+                    let quarterSize = leafSize / 4;
+                    
+                    // Create a detailed leaf shape using bezier curves
+                    let leafPath = `M${leaf.x - halfSize * cos_a},${leaf.y - halfSize * sin_a}`;
+                    leafPath += ` C${leaf.x - quarterSize * cos_a - quarterSize * sin_a},${leaf.y - quarterSize * sin_a + quarterSize * cos_a}`;
+                    leafPath += ` ${leaf.x - quarterSize * cos_a + quarterSize * sin_a},${leaf.y - quarterSize * sin_a - quarterSize * cos_a}`;
+                    leafPath += ` ${leaf.x},${leaf.y}`;
+                    leafPath += ` C${leaf.x + quarterSize * cos_a + quarterSize * sin_a},${leaf.y + quarterSize * sin_a - quarterSize * cos_a}`;
+                    leafPath += ` ${leaf.x + quarterSize * cos_a - quarterSize * sin_a},${leaf.y + quarterSize * sin_a + quarterSize * cos_a}`;
+                    leafPath += ` ${leaf.x + halfSize * cos_a},${leaf.y + halfSize * sin_a}`;
+                    leafPath += ` C${leaf.x + quarterSize * cos_a + quarterSize * sin_a},${leaf.y + quarterSize * sin_a - quarterSize * cos_a}`;
+                    leafPath += ` ${leaf.x - quarterSize * cos_a + quarterSize * sin_a},${leaf.y - quarterSize * sin_a - quarterSize * cos_a}`;
+                    leafPath += ` Z`;
+                    
+                    svgContent += `<path d="${leafPath}" fill="#228b22" stroke="#146414" stroke-width="0.5"/>
+`;
+                    
+                    // Add leaf center vein
+                    svgContent += `<line x1="${leaf.x - halfSize * cos_a}" y1="${leaf.y - halfSize * sin_a}" x2="${leaf.x + halfSize * cos_a}" y2="${leaf.y + halfSize * sin_a}" stroke="#146414" stroke-width="0.3"/>
+`;
+                });
+            } else {
+                // For line mode, recreate the mathematical curve
+                let variation = variations[currentVariation];
+                let scaleFactor = 140;
+                let pathPoints = [];
+                
+                // Generate all points along the curve
+                for (let svgT = 0; svgT <= maxT; svgT += dt * 5) {
+                    let [x, y] = calculatePoint(svgT, variation);
+                    let drawX = x * scaleFactor;
+                    let drawY = y * scaleFactor;
+                    pathPoints.push([drawX, drawY]);
+                }
+                
+                // Add path for line mode
+                if (pathPoints.length > 1) {
+                    svgContent += `<path d="M${pathPoints[0][0]},${pathPoints[0][1]}`;
+                    for (let i = 1; i < pathPoints.length; i++) {
+                        svgContent += ` L${pathPoints[i][0]},${pathPoints[i][1]}`;
+                    }
+                    svgContent += `" stroke="#43231a" stroke-width="1.5" fill="none"/>
+`;
+                }
+            }
+            
+            svgContent += `</g>
+</svg>`;
+            
+            // Download the SVG file
+            const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename + '.svg';
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function setMode(mode) {
+            useLeaf = (mode === 'leaf');
+            if (isDrawing) {
+                resetDrawing();
+                isDrawing = true;
+            }
+            updateUI();
+        }
+
+        function setTimingMode(mode) {
+            useTimeBased = (mode === 'time');
+            if (isDrawing) {
+                resetDrawing();
+                isDrawing = true;
+            }
+            updateUI();
+        }
+
+        function updateUI() {
+            // Update mode buttons
+            const lineBtn = document.getElementById('line-mode');
+            const leafBtn = document.getElementById('leaf-mode');
+            if (lineBtn && leafBtn) {
+                lineBtn.classList.toggle('active', !useLeaf);
+                leafBtn.classList.toggle('active', useLeaf);
+            }
+            
+            // Show/hide leaf-specific sections
+            const leafUploadSection = document.getElementById('leaf-upload-section');
+            const timingSection = document.getElementById('timing-section');
+            const leafSettingsSection = document.getElementById('leaf-settings-section');
+            
+            if (leafUploadSection) {
+                leafUploadSection.style.display = useLeaf ? 'block' : 'none';
+            }
+            if (timingSection) {
+                timingSection.style.display = useLeaf ? 'block' : 'none';
+            }
+            if (leafSettingsSection) {
+                leafSettingsSection.style.display = useLeaf ? 'block' : 'none';
+            }
+            
+            // Update timing mode buttons
+            const timeBtn = document.getElementById('time-mode');
+            const distanceBtn = document.getElementById('distance-mode');
+            if (timeBtn && distanceBtn) {
+                timeBtn.classList.toggle('active', useTimeBased);
+                distanceBtn.classList.toggle('active', !useTimeBased);
+            }
+        }
+
+        function updatePatternButtons() {
+            document.querySelectorAll('.pattern-btn').forEach((btn, index) => {
+                btn.classList.toggle('active', index === currentVariation);
+            });
+        }
+
+        function updateStatus() {
+            const statusElements = {
+                'drawing-status': isDrawing ? 'Drawing...' : 'Ready',
+                'leaves-drawn': `${drawnLeaves.length}/${totalLeaves}`,
+                'current-pattern': variations[currentVariation][0],
+                'current-mode': useLeaf ? 'Leaf' : 'Line',
+                'timing-mode': useTimeBased ? 'Time-based' : 'Distance-based'
+            };
+            
+            Object.entries(statusElements).forEach(([id, value]) => {
+                const element = document.getElementById(id);
+                if (element) element.textContent = value;
+            });
+        }
+
+        // Keyboard shortcuts
+        function keyPressed() {
+            if (key >= '0' && key <= '9') {
+                let index = parseInt(key);
+                if (index < variations.length) {
+                    startPattern(index);
+                }
+            }
+            
+            if (key === ' ') {
+                isDrawing = !isDrawing;
+            }
+            
+            if (key === 'r' || key === 'R') {
+                resetDrawing();
+            }
+            
+            if (key === 's' || key === 'S') {
+                saveImage();
+            }
+            
+            if (key === 'l' || key === 'L') {
+                setMode(useLeaf ? 'line' : 'leaf');
+            }
+            
+            if (key === 't' || key === 'T') {
+                setTimingMode(useTimeBased ? 'distance' : 'time');
+            }
+        }
+    </script>
+</body>
