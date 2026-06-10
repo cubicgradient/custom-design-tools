@@ -171,6 +171,14 @@
             width: 100%; background: #1a1a1a; border: 1px solid #333; 
             color: #fff; padding: 10px; border-radius: 6px; font-size: 11px; 
         }
+        textarea#text {
+            width: 100%; background: #1a1a1a; border: 1px solid #333;
+            color: #fff; padding: 10px; border-radius: 6px; font-size: 11px;
+            font-family: 'Martian Mono', monospace;
+            resize: vertical;
+            min-height: 70px;
+            line-height: 1.5;
+        }
         input[type="color"] { 
             width: 100%; height: 35px; border: 1px solid #333; 
             cursor: pointer; background: #1a1a1a; border-radius: 6px; 
@@ -190,28 +198,120 @@
         }
         .file-drop-zone:hover { border-color: #666; background: #1a1a1a; }
         .file-drop-zone.drag-over { border-color: #fff; background: #222; }
+        .canvas-size-row {
+            display: flex;
+            gap: 10px;
+        }
+        .canvas-size-row .control {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        input[type="number"] {
+            width: 100%; background: #1a1a1a; border: 1px solid #333;
+            color: #fff; padding: 10px; border-radius: 6px; font-size: 11px;
+            font-family: 'Martian Mono', monospace;
+            -moz-appearance: textfield;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { opacity: 0.4; }
     </style>
 </head>
 <body>
     <div id="canvas-container">
-        <canvas id="canvas" width="800" height="1200"></canvas>
+        <canvas id="canvas" width="2000" height="1400"></canvas>
     </div>
     
     <div id="controls">
         <div id="controls-content">
         <div class="section">
+            <div class="section-title">Canvas Size</div>
+            <div class="canvas-size-row">
+                <div class="control">
+                    <label>Width (px)</label>
+                    <input type="number" id="canvas-width" value="2000" min="100" max="8000" step="1">
+                </div>
+                <div class="control">
+                    <label>Height (px)</label>
+                    <input type="number" id="canvas-height" value="1400" min="100" max="8000" step="1">
+                </div>
+            </div>
+            <button onclick="applyCanvasSize()" style="margin-top: 12px;">Apply Size</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Typography</div>
+            <div class="control" id="text-group">
+                <label>Text</label>
+                <textarea id="text" rows="3">DISTORTED
+FLAG</textarea>
+            </div>
+            <div class="control" id="svg-group" style="display:none;">
+                <label>Upload Typography SVG</label>
+                <input type="file" id="typo-svg" accept="image/svg+xml,.svg" style="display:none;">
+                <div class="file-drop-zone" id="typo-drop">Click or drag SVG</div>
+            </div>
+            <div class="control" id="svg-scale-control" style="display:none;">
+                <label>SVG Scale <span class="val" id="v-svg-scale">100</span>%</label>
+                <input type="range" id="svg-scale" min="10" max="200" value="100">
+            </div>
+            <div class="control">
+                <label>Input Mode</label>
+                <select id="typo-mode">
+                    <option value="text">Text Input</option>
+                    <option value="svg">SVG Upload</option>
+                </select>
+            </div>
+            <div class="control">
+                <label>Typography Mode</label>
+                <select id="typo-behavior">
+                    <option value="subtract">Subtract from Surface</option>
+                    <option value="reveal">Reveal Only Typography</option>
+                    <option value="layer" selected>Distorted Typography Layer</option>
+                </select>
+            </div>
+            <div class="control" id="layer-options" style="display:block;">
+                <label><input type="checkbox" id="hide-bg" checked> Hide Background Surface</label>
+            </div>
+            <div class="control" id="font-group">
+                <label>Upload Custom Font</label>
+                <input type="file" id="custom-font" accept=".ttf,.otf,.woff,.woff2" style="display:none;">
+                <div class="file-drop-zone" id="font-drop">Click or drag font</div>
+            </div>
+            <div class="control" id="text-size-group">
+                <label>Font Size <span class="val" id="v-fontsize">329</span></label>
+                <input type="range" id="fontsize" min="20" max="800" value="329">
+            </div>
+            <div class="control" id="text-spacing-group">
+                <label>Line Spacing <span class="val" id="v-linespacing">0.9</span></label>
+                <input type="range" id="linespacing" min="0.5" max="2.0" step="0.1" value="0.9">
+            </div>
+            <div class="control" id="text-letterspacing-group">
+                <label>Letter Spacing <span class="val" id="v-letterspacing">-21</span></label>
+                <input type="range" id="letterspacing" min="-50" max="200" step="1" value="-21">
+            </div>
+            <div class="control" id="text-position-group">
+                <label>Text X <span class="val" id="v-text-x">-10</span></label>
+                <input type="range" id="text-x" min="-400" max="400" value="-10">
+            </div>
+            <div class="control" id="text-position-group-y">
+                <label>Text Y <span class="val" id="v-text-y">76</span></label>
+                <input type="range" id="text-y" min="-600" max="600" value="76">
+            </div>
+        </div>
+
+        <div class="section">
             <div class="section-title">Grid Settings</div>
             <div class="control">
-                <label>Columns <span class="val" id="v-cols">64</span></label>
-                <input type="range" id="cols" min="20" max="200" value="64">
+                <label>Columns <span class="val" id="v-cols">83</span></label>
+                <input type="range" id="cols" min="20" max="200" value="83">
             </div>
             <div class="control">
-                <label>Rows <span class="val" id="v-rows">92</span></label>
-                <input type="range" id="rows" min="30" max="250" value="92">
+                <label>Rows <span class="val" id="v-rows">102</span></label>
+                <input type="range" id="rows" min="30" max="250" value="102">
             </div>
             <div class="control">
-                <label>Spacing <span class="val" id="v-spacing">9</span></label>
-                <input type="range" id="spacing" min="3" max="25" value="9">
+                <label>Spacing <span class="val" id="v-spacing">18</span></label>
+                <input type="range" id="spacing" min="3" max="25" value="18">
             </div>
         </div>
 
@@ -221,7 +321,7 @@
                 <label>Shape</label>
                 <select id="shape">
                     <option value="triangle">Triangle</option>
-                    <option value="circle">Circle</option>
+                    <option value="circle" selected>Circle</option>
                     <option value="square">Square</option>
                     <option value="custom">Custom SVG</option>
                 </select>
@@ -253,12 +353,12 @@
                 <input type="range" id="shape-ratio" min="0" max="100" value="50">
             </div>
             <div class="control" id="size-a-control">
-                <label>Size A <span class="val" id="v-size">11</span></label>
-                <input type="range" id="size" min="2" max="30" value="11">
+                <label>Size <span class="val" id="v-size">16</span></label>
+                <input type="range" id="size" min="2" max="30" value="16">
             </div>
             <div class="control" id="size-b-control" style="display:none;">
-                <label>Size B <span class="val" id="v-size-b">11</span></label>
-                <input type="range" id="size-b" min="2" max="30" value="11">
+                <label>Size B <span class="val" id="v-size-b">16</span></label>
+                <input type="range" id="size-b" min="2" max="30" value="16">
             </div>
             <div class="control">
                 <label>Rotation <span class="val" id="v-rotation">0</span>°</label>
@@ -270,18 +370,18 @@
             <div class="section-title">Colors</div>
             <div class="control">
                 <label>Background</label>
-                <input type="color" id="bgcolor" value="#ffffff">
+                <input type="color" id="bgcolor" value="#000000">
             </div>
             <div class="control">
                 <label>Particle</label>
-                <input type="color" id="fgcolor" value="#000000">
+                <input type="color" id="fgcolor" value="#0000ff">
             </div>
             <div class="control">
-                <label><input type="checkbox" id="dual-color"> Dual Color Mode</label>
+                <label><input type="checkbox" id="dual-color" checked> Dual Color Mode</label>
             </div>
             <div class="control">
                 <label>Color B</label>
-                <input type="color" id="color-b" value="#ff0000">
+                <input type="color" id="color-b" value="#f08080">
             </div>
             <div class="control">
                 <label>Color A Ratio <span class="val" id="v-color-ratio">50</span>%</label>
@@ -302,76 +402,20 @@
                 </select>
             </div>
             <div class="control">
-                <label>Intensity <span class="val" id="v-intensity">43</span></label>
-                <input type="range" id="intensity" min="0" max="300" value="43">
+                <label>Intensity <span class="val" id="v-intensity">39</span></label>
+                <input type="range" id="intensity" min="0" max="300" value="39">
             </div>
             <div class="control">
                 <label>Scale <span class="val" id="v-scale">0.010</span></label>
                 <input type="range" id="scale" min="0.001" max="0.1" step="0.001" value="0.010">
             </div>
             <div class="control">
-                <label>Speed <span class="val" id="v-speed">0.24</span></label>
-                <input type="range" id="speed" min="0" max="3" step="0.01" value="0.24">
+                <label>Speed <span class="val" id="v-speed">0.35</span></label>
+                <input type="range" id="speed" min="0" max="3" step="0.01" value="0.35">
             </div>
             <div class="control">
-                <label>Complexity <span class="val" id="v-complex">3</span></label>
-                <input type="range" id="complex" min="1" max="12" value="3">
-            </div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Typography</div>
-            <div class="control">
-                <label>Input Mode</label>
-                <select id="typo-mode">
-                    <option value="text">Text Input</option>
-                    <option value="svg">SVG Upload</option>
-                </select>
-            </div>
-            <div class="control">
-                <label>Typography Mode</label>
-                <select id="typo-behavior">
-                    <option value="subtract">Subtract from Surface</option>
-                    <option value="reveal">Reveal Only Typography</option>
-                    <option value="layer">Distorted Typography Layer</option>
-                </select>
-            </div>
-            <div class="control" id="layer-options" style="display:none;">
-                <label><input type="checkbox" id="hide-bg"> Hide Background Surface</label>
-            </div>
-            <div class="control" id="text-group">
-                <label>Text</label>
-                <input type="text" id="text" value="Flag">
-            </div>
-            <div class="control" id="svg-group" style="display:none;">
-                <label>Upload Typography SVG</label>
-                <input type="file" id="typo-svg" accept="image/svg+xml,.svg" style="display:none;">
-                <div class="file-drop-zone" id="typo-drop">Click or drag SVG</div>
-            </div>
-            <div class="control" id="svg-scale-control" style="display:none;">
-                <label>SVG Scale <span class="val" id="v-svg-scale">100</span>%</label>
-                <input type="range" id="svg-scale" min="10" max="200" value="100">
-            </div>
-            <div class="control" id="font-group">
-                <label>Upload Custom Font</label>
-                <input type="file" id="custom-font" accept=".ttf,.otf,.woff,.woff2" style="display:none;">
-                <div class="file-drop-zone" id="font-drop">Click or drag font</div>
-            </div>
-            <div class="control" id="text-size-group">
-                <label>Font Size <span class="val" id="v-fontsize">205</span></label>
-                <input type="range" id="fontsize" min="20" max="800" value="205">
-            </div>
-            <div class="control" id="text-spacing-group">
-                <label>Line Spacing <span class="val" id="v-linespacing">1.0</span></label>
-                <input type="range" id="linespacing" min="0.8" max="2.0" step="0.1" value="1.0">
-            </div>
-            <div class="control" id="text-position-group">
-                <label>Text X <span class="val" id="v-text-x">3</span></label>
-                <input type="range" id="text-x" min="-400" max="400" value="3">
-            </div>
-            <div class="control" id="text-position-group-y">
-                <label>Text Y <span class="val" id="v-text-y">260</span></label>
-                <input type="range" id="text-y" min="-600" max="600" value="260">
+                <label>Complexity <span class="val" id="v-complex">2</span></label>
+                <input type="range" id="complex" min="1" max="12" value="2">
             </div>
         </div>
         </div>
@@ -401,15 +445,15 @@
         const ctx = canvas.getContext('2d');
         
         let params = {
-            cols: 64, rows: 92, spacing: 9, size: 11, shape: 'triangle',
+            cols: 83, rows: 102, spacing: 18, size: 16, shape: 'circle',
             rotation: 0,
-            bgColor: '#ffffff', fgColor: '#000000',
-            dualColor: false, colorB: '#ff0000', colorRatio: 50,
-            dualShape: false, shapeB: 'circle', shapeRatio: 50, sizeB: 11,
-            distType: 'turbulence', intensity: 43, scale: 0.010, speed: 0.24, complex: 3,
-            text: 'Flag', fontSize: 205, lineSpacing: 1.0, textAlign: 'center', textX: 3, textY: 260,
+            bgColor: '#000000', fgColor: '#0000ff',
+            dualColor: true, colorB: '#f08080', colorRatio: 50,
+            dualShape: false, shapeB: 'circle', shapeRatio: 50, sizeB: 16,
+            distType: 'turbulence', intensity: 39, scale: 0.010, speed: 0.35, complex: 2,
+            text: 'DISTORTED\nFLAG', fontSize: 329, lineSpacing: 0.9, letterSpacing: -21, textAlign: 'center', textX: -10, textY: 76,
             invert: false, animate: true, transparentBg: false,
-            typoMode: 'text', typoBehavior: 'subtract', customFont: 'Arial', hideBg: false,
+            typoMode: 'text', typoBehavior: 'layer', customFont: 'Arial', hideBg: true,
             hideTypoSvgBg: false, svgScale: 100
         };
         
@@ -525,12 +569,13 @@
             }
             
             // Text mode - render text to mask
-            // Split text by | for line breaks
-            const lines = params.text.split('|');
+            // Split text by newline for line breaks
+            const lines = params.text.split('\n');
             
             mctx.fillStyle = '#fff';
             mctx.font = `bold ${params.fontSize}px ${params.customFont}, Arial`;
             mctx.textBaseline = 'middle';
+            mctx.letterSpacing = params.letterSpacing + 'px';
             
             // Calculate total text block height
             const lineHeight = params.fontSize * params.lineSpacing;
@@ -775,9 +820,20 @@
             requestAnimationFrame(animate);
         }
 
+        function applyCanvasSize() {
+            const w = parseInt(document.getElementById('canvas-width').value);
+            const h = parseInt(document.getElementById('canvas-height').value);
+            if (!w || !h || w < 100 || h < 100) return;
+            canvas.width = w;
+            canvas.height = h;
+            typoMaskCanvas = null;
+            generateGrid();
+            generateTypoGrid();
+        }
+
         // Setup controls
         ['cols', 'rows', 'spacing', 'size', 'size-b', 'rotation', 'intensity', 'scale', 'speed', 'complex', 
-         'fontsize', 'linespacing', 'text-x', 'text-y', 'svg-scale'].forEach(id => {
+         'fontsize', 'linespacing', 'letterspacing', 'text-x', 'text-y', 'svg-scale'].forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
             const val = document.getElementById('v-' + id);
@@ -789,6 +845,8 @@
                     params.fontSize = v;
                 } else if (id === 'linespacing') {
                     params.lineSpacing = v;
+                } else if (id === 'letterspacing') {
+                    params.letterSpacing = v;
                 } else if (id === 'text-x') {
                     params.textX = v;
                 } else if (id === 'text-y') {
@@ -817,7 +875,7 @@
                     generateGrid();
                     if (params.typoBehavior === 'layer') generateTypoGrid();
                 }
-                if (['fontsize', 'linespacing', 'text-x', 'text-y'].includes(id)) { 
+                if (['fontsize', 'linespacing', 'letterspacing', 'text-x', 'text-y'].includes(id)) { 
                     // For SVG mode, reprocess the SVG to apply new position
                     if (params.typoMode === 'svg' && originalTypoSvgContent && ['text-x', 'text-y'].includes(id)) {
                         processTypoSvg();

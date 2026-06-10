@@ -140,53 +140,18 @@ button.accent:hover { background: #4d9fff; color: #000; }
 <div id="panel">
   <div id="panel-scroll">
 
-    <!-- CANVAS -->
-    <div class="section">
-      <div class="section-title">Canvas</div>
-      <div class="row-inline">
-        <label>W</label>
-        <input type="number" id="inp-cw" value="1280" min="100" max="4000">
-        <span>×</span>
-        <label>H</label>
-        <input type="number" id="inp-ch" value="900" min="100" max="4000">
-        <button style="flex:0;width:auto;margin-top:0;padding:8px 14px;font-size:10px" id="btn-resize">Apply</button>
-      </div>
-      <div class="pills">
-        <span class="pill" data-w="1280" data-h="720">16:9</span>
-        <span class="pill" data-w="1200" data-h="900">4:3</span>
-        <span class="pill" data-w="900" data-h="900">1:1</span>
-        <span class="pill" data-w="1122" data-h="794">A4-L</span>
-        <span class="pill" data-w="794" data-h="1122">A4-P</span>
-        <span class="pill" data-w="1280" data-h="534">2.4:1</span>
-      </div>
-      <div class="ctrl">
-        <label>Export Scale <span class="val" id="v-ex">3×</span></label>
-        <input type="range" id="sl-ex" min="1" max="8" step="0.5" value="3">
-      </div>
-    </div>
-
     <!-- TEXT -->
     <div class="section">
       <div class="section-title">Text</div>
-      <textarea id="ta" spellcheck="false" placeholder="Type here…">نوار ها
-Strips</textarea>
-      <div class="row2">
-        <div class="ctrl">
-          <label>Align</label>
-          <select id="sel-align">
-            <option value="center">Center</option>
-            <option value="left">Left</option>
-            <option value="right">Right</option>
-          </select>
-        </div>
-        <div class="ctrl">
-          <label>Font Size</label>
-          <input type="number" id="inp-fontsize" value="300" min="8" max="1200" style="width:100%">
-        </div>
+      <textarea id="ta" spellcheck="false" placeholder="Type here…">Strypo
+Type</textarea>
+      <div class="ctrl">
+        <label>Font Size <span class="val" id="v-fs">300</span></label>
+        <input type="range" id="sl-fs" min="10" max="1200" step="1" value="300">
       </div>
       <div class="ctrl">
-        <label>Line Height <span class="val" id="v-lh">1.38</span></label>
-        <input type="range" id="sl-lh" min="0.3" max="3" step="0.01" value="1.38">
+        <label>Line Height <span class="val" id="v-lh">0.82</span></label>
+        <input type="range" id="sl-lh" min="0.3" max="3" step="0.01" value="0.82">
       </div>
       <div class="ctrl">
         <label>Letter Spacing <span class="val" id="v-ls">17px</span></label>
@@ -218,8 +183,8 @@ Strips</textarea>
         <div class="tog" id="tog-htf"><div class="knob"></div></div>
       </div>
       <div class="ctrl">
-        <label>Number of Strips <span class="val" id="v-tns">289</span></label>
-        <input type="range" id="sl-tns" min="25" max="600" step="1" value="289">
+        <label>Number of Strips <span class="val" id="v-tns">1200</span></label>
+        <input type="range" id="sl-tns" min="25" max="1200" step="1" value="1200">
       </div>
       <div class="ctrl">
         <label>Thickness <span class="val" id="v-tth">1.37</span></label>
@@ -228,17 +193,17 @@ Strips</textarea>
       <div class="row2">
         <div class="ctrl">
           <label>Letter Fill</label>
-          <input type="color" id="col-tg" value="#0a0a0a">
+          <input type="color" id="col-tg" value="#000000">
         </div>
         <div class="ctrl">
           <label>Strip Color 1</label>
-          <input type="color" id="col-ts1" value="#1a6fff">
+          <input type="color" id="col-ts1" value="#f08080">
         </div>
       </div>
       <div class="row2">
         <div class="ctrl">
           <label>Strip Color 2</label>
-          <input type="color" id="col-ts2" value="#ff5c00">
+          <input type="color" id="col-ts2" value="#0000ff">
         </div>
         <div class="ctrl"></div>
       </div>
@@ -256,24 +221,24 @@ Strips</textarea>
     <div class="section">
       <div class="section-title">Irregularity</div>
       <div class="ctrl">
-        <label>Displacement ↔ <span class="val" id="v-dx">23px</span></label>
-        <input type="range" id="sl-dx" min="0" max="300" step="0.5" value="23">
+        <label>Displacement ↔ <span class="val" id="v-dx">21px</span></label>
+        <input type="range" id="sl-dx" min="0" max="300" step="0.5" value="21">
       </div>
       <div class="ctrl">
-        <label>Overrun ↕ <span class="val" id="v-or">3px</span></label>
-        <input type="range" id="sl-or" min="-200" max="400" step="1" value="3">
+        <label>Overrun ↕ <span class="val" id="v-or">6px</span></label>
+        <input type="range" id="sl-or" min="-200" max="400" step="1" value="6">
       </div>
       <div class="ctrl">
-        <label>Overrun Variation <span class="val" id="v-ov">0.70</span></label>
-        <input type="range" id="sl-ov" min="0" max="1" step="0.01" value="0.7">
+        <label>Overrun Variation <span class="val" id="v-ov">1.00</span></label>
+        <input type="range" id="sl-ov" min="0" max="1" step="0.01" value="1">
       </div>
       <div class="ctrl">
-        <label>Strip Angle <span class="val" id="v-ang">5.9°</span></label>
-        <input type="range" id="sl-ang" min="0" max="45" step="0.1" value="5.9">
+        <label>Strip Angle <span class="val" id="v-ang">3.0°</span></label>
+        <input type="range" id="sl-ang" min="0" max="45" step="0.1" value="3.0">
       </div>
       <div class="ctrl">
-        <label>Seed <span class="val" id="v-seed">527</span></label>
-        <input type="range" id="sl-seed" min="0" max="9999" step="1" value="527">
+        <label>Seed <span class="val" id="v-seed">9999</span></label>
+        <input type="range" id="sl-seed" min="0" max="9999" step="1" value="9999">
       </div>
     </div>
 
@@ -282,7 +247,7 @@ Strips</textarea>
       <div class="section-title">Background Strips</div>
       <div class="ctrl">
         <label>Number of Strips <span class="val" id="v-bns">25</span></label>
-        <input type="range" id="sl-bns" min="25" max="300" step="1" value="25">
+        <input type="range" id="sl-bns" min="25" max="600" step="1" value="25">
       </div>
       <div class="ctrl">
         <label>Thickness <span class="val" id="v-bth">0.55</span></label>
@@ -327,6 +292,31 @@ Strips</textarea>
       </div>
     </div>
 
+    <!-- CANVAS -->
+    <div class="section">
+      <div class="section-title">Canvas</div>
+      <div class="row-inline">
+        <label>W</label>
+        <input type="number" id="inp-cw" value="1280" min="100" max="4000">
+        <span>×</span>
+        <label>H</label>
+        <input type="number" id="inp-ch" value="900" min="100" max="4000">
+        <button style="flex:0;width:auto;margin-top:0;padding:8px 14px;font-size:10px" id="btn-resize">Apply</button>
+      </div>
+      <div class="pills">
+        <span class="pill" data-w="1280" data-h="720">16:9</span>
+        <span class="pill" data-w="1200" data-h="900">4:3</span>
+        <span class="pill" data-w="900" data-h="900">1:1</span>
+        <span class="pill" data-w="1122" data-h="794">A4-L</span>
+        <span class="pill" data-w="794" data-h="1122">A4-P</span>
+        <span class="pill" data-w="1280" data-h="534">2.4:1</span>
+      </div>
+      <div class="ctrl">
+        <label>Export Scale <span class="val" id="v-ex">3×</span></label>
+        <input type="range" id="sl-ex" min="1" max="8" step="0.5" value="3">
+      </div>
+    </div>
+
   </div><!-- /scroll -->
 
   <div id="panel-footer">
@@ -344,9 +334,9 @@ Strips</textarea>
 // ═══════════════════════════════════════════════════════════════════
 const S = {
   // Text
-  text:          'نوار ها\nStrips',
+  text:          'Strypo\nType',
   fontSize:      300,
-  lineSpacing:   1.38,
+  lineSpacing:   0.82,
   letterSpacing: 17,
   textAlign:     'center',
   fontFamily:    'Doran',
@@ -366,26 +356,26 @@ const S = {
   bgStripColor:   '#0a0a0a',
   bgWireframe:    false,
   bgWireThick:    1.0,
-  bgDisplacement: 0,    // lateral shift per strip (px)
-  bgAngle:        0,    // max rotation per strip (degrees)
-  bgSeed:         42,   // independent seed from text strips
+  bgDisplacement: 0,
+  bgAngle:        0,
+  bgSeed:         42,
 
   // Text strips
-  textStrips:    289,
+  textStrips:    1200,
   textThickness: 1.37,
-  hideTextFill:  false,   // when true, skip the solid text silhouette fill
-  textGapColor:  '#0a0a0a',
-  textStrip1:    '#1a6fff',
-  textStrip2:    '#ff5c00',
+  hideTextFill:  false,
+  textGapColor:  '#000000',
+  textStrip1:    '#f08080',
+  textStrip2:    '#0000ff',
   textWireframe: false,
   textWireThick: 1.0,
 
   // Irregularity
-  displacement: 23,
-  overrun:      3,
-  overrunVar:   0.70,
-  maxAngle:     5.9,
-  seed:         527,
+  displacement: 21,
+  overrun:      6,
+  overrunVar:   1.00,
+  maxAngle:     3.0,
+  seed:         9999,
 };
 
 
@@ -836,13 +826,9 @@ document.getElementById('ta').addEventListener('input', function () {
   rebuild();
 });
 
-document.getElementById('sel-align').addEventListener('change', function () {
-  S.textAlign = this.value;
-  rebuild();
-});
-
-document.getElementById('inp-fontsize').addEventListener('input', function () {
-  S.fontSize = Math.max(8, parseInt(this.value) || 8);
+document.getElementById('sl-fs').addEventListener('input', function () {
+  S.fontSize = parseInt(this.value);
+  document.getElementById('v-fs').textContent = this.value;
   rebuild();
 });
 

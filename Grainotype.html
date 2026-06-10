@@ -48,22 +48,47 @@
         /* Control Panel */
         #controls {
             background: #111;
-            padding: 25px;
+            padding: 0;
             width: 420px;
             height: 100%;
-            overflow-y: auto;
+            overflow: hidden;
             border: 1px solid #222;
             margin-left: 20px;
             border-radius: 16px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
         }
-        
+
+        #controls-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 25px;
+            padding-bottom: 10px;
+        }
+
+        #controls-content::-webkit-scrollbar { display: none; }
+
         #controls::-webkit-scrollbar {
             display: none;
         }
-        
+
         /* Sections */
+        .section {
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #222;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #fff;
+        }
+
         .control-group {
             margin-bottom: 14px;
         }
@@ -98,15 +123,6 @@
             letter-spacing: 0.5px;
         }
         
-        /* Divider */
-        .divider {
-            height: 1px;
-            background: #222;
-            margin: 25px 0;
-            padding-bottom: 20px;
-            border: none;
-        }
-        
         /* Input Elements */
         input[type="text"],
         input[type="number"],
@@ -118,6 +134,21 @@
             padding: 10px;
             border-radius: 6px;
             font-size: 11px;
+            box-sizing: border-box;
+        }
+
+        textarea#textInput {
+            width: 100%;
+            background: #1a1a1a;
+            border: 1px solid #333;
+            color: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-family: 'Martian Mono', monospace;
+            resize: vertical;
+            min-height: 70px;
+            line-height: 1.5;
             box-sizing: border-box;
         }
         
@@ -177,160 +208,180 @@
     <div id="canvas-container"></div>
     
     <div id="controls">
-        <h1>Generative Typography</h1>
-        
-        <div class="control-group">
-            <label>
-                <input type="checkbox" id="useSVG"> Use Custom SVG
-            </label>
-        </div>
-        
-        <div class="control-group" id="svgUploadGroup" style="display: none;">
-            <label>Upload SVG File</label>
-            <input type="file" id="svgUpload" accept=".svg">
-        </div>
-        
-        <div class="control-group" id="svgSizeGroup" style="display: none;">
-            <label>SVG Size <span class="value-display" id="svgSizeValue">80</span>%</label>
-            <input type="range" id="svgSize" min="10" max="200" value="80">
-        </div>
-        
-        <div class="divider"></div>
-        
-        <div id="textControls">
-            <div class="control-group">
-                <label>Text</label>
-                <input type="text" id="textInput" value="MULTI|LINE">
+        <div id="controls-content">
+
+        <div class="section">
+            <div class="section-title">Canvas Size</div>
+            <div style="display:flex; gap:10px;">
+                <div class="control-group" style="flex:1; margin-bottom:0;">
+                    <label>Width (px)</label>
+                    <input type="number" id="canvasWidth" value="1200" min="100" max="8000" step="10">
+                </div>
+                <div class="control-group" style="flex:1; margin-bottom:0;">
+                    <label>Height (px)</label>
+                    <input type="number" id="canvasHeight" value="800" min="100" max="8000" step="10">
+                </div>
             </div>
-            
+            <button id="applyCanvasSizeBtn" style="margin-top:12px;">Apply Size</button>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Typography</div>
+
+            <div class="control-group" id="textGroup">
+                <label>Text</label>
+                <textarea id="textInput" rows="3">GRAINO
+TYPE</textarea>
+            </div>
+
+            <div class="control-group" id="svgUploadGroup" style="display: none;">
+                <label>Upload SVG File</label>
+                <input type="file" id="svgUpload" accept=".svg">
+            </div>
+
+            <div class="control-group" id="svgSizeGroup" style="display: none;">
+                <label>SVG Size <span class="value-display" id="svgSizeValue">80</span>%</label>
+                <input type="range" id="svgSize" min="10" max="200" value="80">
+            </div>
+
             <div class="control-group">
-                <label>Text Direction</label>
-                <select id="textDirection">
-                    <option value="ltr">Left-to-Right (LTR)</option>
-                    <option value="rtl">Right-to-Left (RTL)</option>
+                <label>Input Mode</label>
+                <select id="inputMode">
+                    <option value="text">Text Input</option>
+                    <option value="svg">SVG Upload</option>
                 </select>
             </div>
-            
-            <div class="divider"></div>
-            
-            <div class="control-group">
-                <label>Font Size <span class="value-display" id="fontSizeValue">200</span></label>
-                <input type="range" id="fontSize" min="50" max="400" value="200">
+
+            <div class="control-group" id="fontUploadGroup">
+                <label>Upload Custom Font (.ttf / .otf)</label>
+                <input type="file" id="fontUpload" accept=".ttf,.otf">
             </div>
-            
+
             <div class="control-group">
-                <label>Letter Spacing <span class="value-display" id="trackingValue">0</span></label>
-                <input type="range" id="tracking" min="-20" max="100" value="0">
+                <label>Font Size <span class="value-display" id="fontSizeValue">252</span></label>
+                <input type="range" id="fontSize" min="50" max="400" value="252">
             </div>
-            
+
             <div class="control-group">
-                <label>Line Spacing <span class="value-display" id="lineSpacingValue">1.2</span></label>
-                <input type="range" id="lineSpacing" min="0.8" max="2.0" step="0.1" value="1.2">
+                <label>Letter Spacing <span class="value-display" id="trackingValue">-14</span></label>
+                <input type="range" id="tracking" min="-20" max="100" value="-14">
             </div>
-            
-            <div class="divider"></div>
+
+            <div class="control-group">
+                <label>Line Spacing <span class="value-display" id="lineSpacingValue">0.8</span></label>
+                <input type="range" id="lineSpacing" min="0.8" max="2.0" step="0.1" value="0.8">
+            </div>
+
+            <div class="control-group">
+                <label>Text X <span class="value-display" id="textXValue">0</span></label>
+                <input type="range" id="textX" min="-400" max="400" value="0">
+            </div>
+
+            <div class="control-group">
+                <label>Text Y <span class="value-display" id="textYValue">83</span></label>
+                <input type="range" id="textY" min="-400" max="400" value="83">
+            </div>
         </div>
-        
-        <div class="control-group">
-            <label>Particle Type</label>
-            <select id="particleType">
-                <option value="dots">Dots</option>
-                <option value="lines">Lines</option>
-                <option value="rectangles">Rectangles</option>
-                <option value="polygons">Polygons</option>
-                <option value="mixed">Mixed</option>
-            </select>
+
+        <div class="section">
+            <div class="section-title">Particles</div>
+
+            <div class="control-group">
+                <label>Particle Type</label>
+                <select id="particleType">
+                    <option value="dots">Dots</option>
+                    <option value="lines" selected>Lines</option>
+                    <option value="rectangles">Rectangles</option>
+                    <option value="polygons">Polygons</option>
+                    <option value="mixed">Mixed</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Particle Density <span class="value-display" id="densityValue">1</span></label>
+                <input type="range" id="density" min="0.05" max="5.0" step="0.05" value="1">
+            </div>
+
+            <div class="control-group">
+                <label>Min Spacing <span class="value-display" id="spacingValue">3</span></label>
+                <input type="range" id="spacing" min="1" max="30" value="3">
+            </div>
+
+            <div class="control-group">
+                <label>Arrangement Irregularity <span class="value-display" id="arrangementValue">1</span></label>
+                <input type="range" id="arrangement" min="0" max="1" step="0.05" value="1">
+            </div>
+
+            <div class="control-group">
+                <label>Particle Bleed <span class="value-display" id="bleedValue">2</span></label>
+                <input type="range" id="bleed" min="0" max="40" value="2">
+            </div>
+
+            <div class="control-group">
+                <label>Bleed Randomness <span class="value-display" id="bleedRandomnessValue">1.1</span></label>
+                <input type="range" id="bleedRandomness" min="0" max="2.0" step="0.1" value="1.1">
+            </div>
+
+            <div class="control-group">
+                <label>Particle Size <span class="value-display" id="particleSizeValue">2</span></label>
+                <input type="range" id="particleSize" min="1" max="10" step="0.5" value="2">
+            </div>
+
+            <div class="control-group">
+                <label>Size Variation <span class="value-display" id="sizeVariationValue">0.1</span></label>
+                <input type="range" id="sizeVariation" min="0" max="1" step="0.1" value="0.1">
+            </div>
+
+            <div class="control-group">
+                <label>Edge Softness <span class="value-display" id="edgeSoftnessValue">10</span></label>
+                <input type="range" id="edgeSoftness" min="0" max="30" value="10">
+            </div>
         </div>
-        
-        <div class="control-group">
-            <label>Particle Density <span class="value-display" id="densityValue">0.5</span></label>
-            <input type="range" id="density" min="0.05" max="5.0" step="0.05" value="0.5">
+
+        <div class="section">
+            <div class="section-title">Colors</div>
+
+            <div class="control-group">
+                <label>Background Color</label>
+                <input type="color" id="bgColor" value="#000000">
+            </div>
+
+            <div class="control-group">
+                <label>Color A</label>
+                <input type="color" id="colorA" value="#f08080">
+            </div>
+
+            <div class="control-group">
+                <label><input type="checkbox" id="useDualColor" checked> Use Color B</label>
+            </div>
+
+            <div class="control-group" id="colorBGroup" style="display: block;">
+                <label>Color B</label>
+                <input type="color" id="colorB" value="#0000ff">
+            </div>
+
+            <div class="control-group" id="ratioGroup" style="display: block;">
+                <label>Color A Ratio <span class="value-display" id="colorRatioValue">50</span>%</label>
+                <input type="range" id="colorRatio" min="0" max="100" value="50">
+            </div>
+
+            <div class="control-group">
+                <label><input type="checkbox" id="showOutline"> Show Letter Outlines</label>
+            </div>
+
+            <div class="control-group">
+                <label><input type="checkbox" id="invertMode"> Invert (Empty Letters)</label>
+            </div>
         </div>
-        
-        <div class="control-group">
-            <label>Min Spacing <span class="value-display" id="spacingValue">8</span></label>
-            <input type="range" id="spacing" min="1" max="30" value="8">
+
+        <div style="margin-bottom: 25px;">
+            <button id="generateBtn">Generate</button>
+            <button id="exportBtn">Export PNG (White BG)</button>
+            <button id="exportTransparentBtn">Export PNG (Transparent)</button>
+            <button id="exportSVGBtn">Export SVG</button>
         </div>
-        
-        <div class="control-group">
-            <label>Arrangement Irregularity <span class="value-display" id="arrangementValue">0.5</span></label>
-            <input type="range" id="arrangement" min="0" max="1" step="0.05" value="0.5">
+
         </div>
-        
-        <div class="control-group">
-            <label>Particle Bleed <span class="value-display" id="bleedValue">0</span></label>
-            <input type="range" id="bleed" min="0" max="40" value="0">
-        </div>
-        
-        <div class="control-group">
-            <label>Bleed Randomness <span class="value-display" id="bleedRandomnessValue">0.8</span></label>
-            <input type="range" id="bleedRandomness" min="0" max="2.0" step="0.1" value="0.8">
-        </div>
-        
-        <div class="control-group">
-            <label>Particle Size <span class="value-display" id="particleSizeValue">3</span></label>
-            <input type="range" id="particleSize" min="1" max="10" step="0.5" value="3">
-        </div>
-        
-        <div class="control-group">
-            <label>Size Variation <span class="value-display" id="sizeVariationValue">0.3</span></label>
-            <input type="range" id="sizeVariation" min="0" max="1" step="0.1" value="0.3">
-        </div>
-        
-        <div class="control-group">
-            <label>Edge Softness <span class="value-display" id="edgeSoftnessValue">10</span></label>
-            <input type="range" id="edgeSoftness" min="0" max="30" value="10">
-        </div>
-        
-        <div class="divider"></div>
-        
-        <div class="control-group">
-            <label>Background Color</label>
-            <input type="color" id="bgColor" value="#ffffff">
-        </div>
-        
-        <div class="control-group">
-            <label>Color A</label>
-            <input type="color" id="colorA" value="#000000">
-        </div>
-        
-        <div class="control-group">
-            <label>
-                <input type="checkbox" id="useDualColor"> Use Color B
-            </label>
-        </div>
-        
-        <div class="control-group" id="colorBGroup" style="display: none;">
-            <label>Color B</label>
-            <input type="color" id="colorB" value="#FF0000">
-        </div>
-        
-        <div class="control-group" id="ratioGroup" style="display: none;">
-            <label>Color A Ratio <span class="value-display" id="colorRatioValue">50</span>%</label>
-            <input type="range" id="colorRatio" min="0" max="100" value="50">
-        </div>
-        
-        <div class="control-group">
-            <label>
-                <input type="checkbox" id="showOutline" checked> Show Letter Outlines
-            </label>
-        </div>
-        
-        <div class="control-group">
-            <label>
-                <input type="checkbox" id="invertMode"> Invert (Empty Letters)
-            </label>
-        </div>
-        
-        <div class="divider"></div>
-        
-        <div class="control-group">
-            <label>Custom Font (.ttf / .otf)</label>
-            <input type="file" id="fontUpload" accept=".ttf,.otf">
-        </div>
-        
-        <button id="generateBtn">Generate</button>
-        <button id="exportBtn">Export High Quality PNG</button>
     </div>
 
     <script>
@@ -348,28 +399,31 @@
         
         // Configuration object holding all parameters
         let config = {
-            text: 'MULTI|LINE',
-            textDirection: 'ltr',
-            fontSize: 200,
-            tracking: 0,
-            lineSpacing: 1.2,
-            particleType: 'dots',
-            density: 0.5,
-            minSpacing: 8,
-            arrangement: 0.5,
-            particleSize: 3,
-            sizeVariation: 0.3,
+            text: 'GRAINO\nTYPE',
+            fontSize: 252,
+            tracking: -14,
+            lineSpacing: 0.8,
+            textX: 0,
+            textY: 83,
+            particleType: 'lines',
+            density: 1,
+            minSpacing: 3,
+            arrangement: 1,
+            particleSize: 2,
+            sizeVariation: 0.1,
             edgeSoftness: 10,
-            bgColor: '#ffffff',
-            colorA: '#000000',
-            useDualColor: false,
-            colorB: '#FF0000',
+            bgColor: '#000000',
+            colorA: '#f08080',
+            useDualColor: true,
+            colorB: '#0000ff',
             colorRatio: 50,
-            showOutline: true,
-            bleed: 0,
-            bleedRandomness: 0.8,
-            svgSize: 80, // SVG size as percentage
-            invertMode: false // Invert particles (background instead of letters)
+            showOutline: false,
+            bleed: 2,
+            bleedRandomness: 1.1,
+            svgSize: 80,
+            invertMode: false,
+            canvasWidth: 1200,
+            canvasHeight: 800
         };
         
         // ============================================
@@ -383,7 +437,7 @@
         }
         
         function setup() {
-            let canvas = createCanvas(1200, 800);
+            let canvas = createCanvas(config.canvasWidth, config.canvasHeight);
             canvas.parent('canvas-container');
             
             // Initialize noise for organic bleed effects
@@ -405,99 +459,149 @@
         }
         
         // ============================================
+        // DEBOUNCED AUTO-GENERATE
+        // ============================================
+        
+        function debounce(fn, delay) {
+            let timer;
+            return function(...args) {
+                clearTimeout(timer);
+                timer = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+        
+        let debouncedGenerate = debounce(() => generateTypography(), 400);
+        
+        // ============================================
         // UI CONTROL SETUP
         // ============================================
         
         function setupUIControls() {
-            // Text input
-            select('#textInput').input(() => {
-                config.text = select('#textInput').value();
+            // Text input (textarea — newlines are native)
+            document.getElementById('textInput').addEventListener('input', () => {
+                config.text = document.getElementById('textInput').value;
+                debouncedGenerate();
             });
-            
-            // Text direction
-            select('#textDirection').changed(() => {
-                config.textDirection = select('#textDirection').value();
+
+            // Input mode dropdown (replaces useSVG checkbox)
+            document.getElementById('inputMode').addEventListener('change', () => {
+                const isSVG = document.getElementById('inputMode').value === 'svg';
+                useSVGMode = isSVG;
+                document.getElementById('textGroup').style.display = isSVG ? 'none' : 'block';
+                document.getElementById('fontUploadGroup').style.display = isSVG ? 'none' : 'block';
+                document.getElementById('svgUploadGroup').style.display = isSVG ? 'block' : 'none';
+                document.getElementById('svgSizeGroup').style.display = (isSVG && svgPaths) ? 'block' : 'none';
+                if (!isSVG) svgPaths = null;
+                generateTypography();
             });
-            
+
             // Font size
             select('#fontSize').input(() => {
                 config.fontSize = parseFloat(select('#fontSize').value());
                 select('#fontSizeValue').html(config.fontSize);
+                debouncedGenerate();
             });
             
             // Tracking (letter spacing)
             select('#tracking').input(() => {
                 config.tracking = parseFloat(select('#tracking').value());
                 select('#trackingValue').html(config.tracking);
+                debouncedGenerate();
             });
             
             // Line spacing
             select('#lineSpacing').input(() => {
                 config.lineSpacing = parseFloat(select('#lineSpacing').value());
                 select('#lineSpacingValue').html(config.lineSpacing);
+                debouncedGenerate();
+            });
+
+            // Text X
+            select('#textX').input(() => {
+                config.textX = parseFloat(select('#textX').value());
+                select('#textXValue').html(config.textX);
+                debouncedGenerate();
+            });
+
+            // Text Y
+            select('#textY').input(() => {
+                config.textY = parseFloat(select('#textY').value());
+                select('#textYValue').html(config.textY);
+                debouncedGenerate();
             });
             
             // Particle type
             select('#particleType').changed(() => {
                 config.particleType = select('#particleType').value();
+                debouncedGenerate();
             });
             
             // Density
             select('#density').input(() => {
                 config.density = parseFloat(select('#density').value());
                 select('#densityValue').html(config.density);
+                debouncedGenerate();
             });
             
             // Minimum spacing
             select('#spacing').input(() => {
                 config.minSpacing = parseFloat(select('#spacing').value());
                 select('#spacingValue').html(config.minSpacing);
+                debouncedGenerate();
             });
             
             // Arrangement irregularity
             select('#arrangement').input(() => {
                 config.arrangement = parseFloat(select('#arrangement').value());
                 select('#arrangementValue').html(config.arrangement);
+                debouncedGenerate();
             });
             
             // Particle bleed
             select('#bleed').input(() => {
                 config.bleed = parseFloat(select('#bleed').value());
                 select('#bleedValue').html(config.bleed);
+                debouncedGenerate();
             });
             
             // Bleed randomness
             select('#bleedRandomness').input(() => {
                 config.bleedRandomness = parseFloat(select('#bleedRandomness').value());
                 select('#bleedRandomnessValue').html(config.bleedRandomness);
+                debouncedGenerate();
             });
             
             // Particle size
             select('#particleSize').input(() => {
                 config.particleSize = parseFloat(select('#particleSize').value());
                 select('#particleSizeValue').html(config.particleSize);
+                debouncedGenerate();
             });
             
             // Size variation
             select('#sizeVariation').input(() => {
                 config.sizeVariation = parseFloat(select('#sizeVariation').value());
                 select('#sizeVariationValue').html(config.sizeVariation);
+                debouncedGenerate();
             });
             
             // Edge softness
             select('#edgeSoftness').input(() => {
                 config.edgeSoftness = parseFloat(select('#edgeSoftness').value());
                 select('#edgeSoftnessValue').html(config.edgeSoftness);
+                debouncedGenerate();
             });
             
             // Background color
             select('#bgColor').input(() => {
                 config.bgColor = select('#bgColor').value();
+                debouncedGenerate();
             });
             
             // Color A
             select('#colorA').input(() => {
                 config.colorA = select('#colorA').value();
+                debouncedGenerate();
             });
             
             // Dual color toggle
@@ -510,12 +614,14 @@
             // Color B
             select('#colorB').input(() => {
                 config.colorB = select('#colorB').value();
+                debouncedGenerate();
             });
             
             // Color ratio
             select('#colorRatio').input(() => {
                 config.colorRatio = parseFloat(select('#colorRatio').value());
                 select('#colorRatioValue').html(config.colorRatio);
+                debouncedGenerate();
             });
             
             // Show outline toggle
@@ -541,25 +647,6 @@
                 }
             });
             
-            // SVG mode toggle
-            select('#useSVG').changed(() => {
-                useSVGMode = select('#useSVG').checked();
-                
-                // Show/hide appropriate controls
-                if (useSVGMode) {
-                    select('#svgUploadGroup').style('display', 'block');
-                    select('#svgSizeGroup').style('display', 'block');
-                    select('#textControls').style('display', 'none');
-                } else {
-                    select('#svgUploadGroup').style('display', 'none');
-                    select('#svgSizeGroup').style('display', 'none');
-                    select('#textControls').style('display', 'block');
-                    svgPaths = null; // Clear SVG data
-                }
-                
-                generateTypography();
-            });
-            
             // SVG upload
             select('#svgUpload').changed((e) => {
                 let file = e.target.files[0];
@@ -567,6 +654,7 @@
                     let reader = new FileReader();
                     reader.onload = function(event) {
                         parseSVG(event.target.result);
+                        document.getElementById('svgSizeGroup').style.display = 'block';
                     };
                     reader.readAsText(file);
                 }
@@ -584,9 +672,31 @@
                 generateTypography();
             });
             
-            // Export button
+            // Export PNG (white bg) button
             select('#exportBtn').mousePressed(() => {
-                exportHighQuality();
+                exportHighQuality(false);
+            });
+            
+            // Export PNG (transparent bg) button
+            select('#exportTransparentBtn').mousePressed(() => {
+                exportHighQuality(true);
+            });
+            
+            // Export SVG button
+            select('#exportSVGBtn').mousePressed(() => {
+                exportSVG();
+            });
+            
+            // Apply canvas size button
+            document.getElementById('applyCanvasSizeBtn').addEventListener('click', () => {
+                let w = parseInt(document.getElementById('canvasWidth').value) || 1200;
+                let h = parseInt(document.getElementById('canvasHeight').value) || 800;
+                w = Math.max(100, Math.min(8000, w));
+                h = Math.max(100, Math.min(8000, h));
+                config.canvasWidth = w;
+                config.canvasHeight = h;
+                resizeCanvas(w, h);
+                generateTypography();
             });
         }
         
@@ -719,10 +829,9 @@
          * Handles multi-line text and letter spacing
          */
         function processTextToLetters() {
-            // Replace pipe character with newline for multi-line support
-            let processedText = config.text.replace(/\|/g, '\n');
-            let lines = processedText.split('\n');
-            let startY = height / 2 - (lines.length - 1) * config.fontSize * config.lineSpacing / 2;
+            // Split on newline directly (textarea handles Enter natively)
+            let lines = config.text.split('\n');
+            let startY = height / 2 - (lines.length - 1) * config.fontSize * config.lineSpacing / 2 + config.textY;
             
             // Get the current font being used
             let font = customFont || currentFont;
@@ -750,51 +859,30 @@
                     }
                 }
                 
-                let startX = (width - totalWidth) / 2;
-                
-                // For RTL, start from the right
-                let currentX = config.textDirection === 'rtl' ? 
-                               startX + totalWidth : 
-                               startX;
+                let startX = (width - totalWidth) / 2 + config.textX;
+                let currentX = startX;
                 
                 // Process each character
                 let charArray = line.split('');
-                
-                // For RTL, process characters right to left
-                if (config.textDirection === 'rtl') {
-                    charArray.reverse();
-                }
                 
                 for (let i = 0; i < charArray.length; i++) {
                     let char = charArray[i];
                     let charWidth = textWidth(char);
                     
                     if (char.trim() === '') {
-                        if (config.textDirection === 'rtl') {
-                            currentX -= (textWidth(' ') + config.tracking);
-                        } else {
-                            currentX += (textWidth(' ') + config.tracking);
-                        }
+                        currentX += (textWidth(' ') + config.tracking);
                         continue;
                     }
                     
-                    // For RTL, position is adjusted for character width
-                    let charX = config.textDirection === 'rtl' ? 
-                                currentX - charWidth : 
-                                currentX;
-                    
                     try {
-                        // Get character outline points
-                        // Higher sampleFactor = more points = smoother curves
-                        let points = font.textToPoints(char, charX, currentY, config.fontSize, {
-                            sampleFactor: 0.5,  // Increased from 0.2 for denser sampling
+                        let points = font.textToPoints(char, currentX, currentY, config.fontSize, {
+                            sampleFactor: 0.5,
                             simplifyThreshold: 0
                         });
                         
-                        console.log(`Char "${char}" at (${charX}, ${currentY}): ${points.length} points`);
+                        console.log(`Char "${char}" at (${currentX}, ${currentY}): ${points.length} points`);
                         
                         if (points && points.length > 0) {
-                            // Calculate bounding box
                             let minX = Math.min(...points.map(p => p.x));
                             let maxX = Math.max(...points.map(p => p.x));
                             let minY = Math.min(...points.map(p => p.y));
@@ -804,7 +892,7 @@
                                 char: char,
                                 points: points,
                                 bounds: { minX, maxX, minY, maxY },
-                                x: charX,
+                                x: currentX,
                                 y: currentY
                             });
                         }
@@ -812,12 +900,7 @@
                         console.error(`Error processing character "${char}":`, e);
                     }
                     
-                    // Advance position
-                    if (config.textDirection === 'rtl') {
-                        currentX -= (charWidth + config.tracking);
-                    } else {
-                        currentX += (charWidth + config.tracking);
-                    }
+                    currentX += (charWidth + config.tracking);
                 }
             }
         }
@@ -1511,8 +1594,8 @@
   // ============================================
         
         // High quality export function - creates ultra high-res screenshot
-        function exportHighQuality() {
-            console.log('Exporting at 5x resolution (ultra high-res screenshot)...');
+        function exportHighQuality(transparent = false) {
+            console.log('Exporting at 5x resolution...');
             
             // Create a new high-resolution canvas
             let scale = 5; // 5x resolution for ultra high quality
@@ -1524,9 +1607,12 @@
             // Scale the context
             ctx.scale(scale, scale);
             
-            // Draw background
-            ctx.fillStyle = config.bgColor;
-            ctx.fillRect(0, 0, width, height);
+            if (!transparent) {
+                // Draw background
+                ctx.fillStyle = config.bgColor;
+                ctx.fillRect(0, 0, width, height);
+            }
+            // If transparent: leave canvas clear (default transparent)
             
             // Draw letter outlines if enabled
             if (config.showOutline) {
@@ -1598,15 +1684,121 @@
             }
             
             // Convert to blob and download
+            let suffix = transparent ? 'transparent' : 'white-bg';
             exportCanvas.toBlob((blob) => {
                 let url = URL.createObjectURL(blob);
                 let link = document.createElement('a');
-                link.download = 'generative_typography_hq.png';
+                link.download = `grainotype_${suffix}.png`;
                 link.href = url;
                 link.click();
                 URL.revokeObjectURL(url);
-                console.log('Export complete!');
+                console.log('PNG export complete!');
             }, 'image/png');
+        }
+        
+        // ============================================
+        // SVG EXPORT
+        // ============================================
+        
+        function exportSVG() {
+            console.log('Exporting SVG...');
+            
+            let svgParts = [];
+            
+            // SVG header
+            svgParts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">`);
+            
+            // Background rect (only if not wanting transparent — use a flag or just always include it as optional)
+            // We include it but users can delete it in Illustrator/Inkscape easily
+            svgParts.push(`  <!-- Remove the rect below for transparent background -->`);
+            svgParts.push(`  <rect width="${width}" height="${height}" fill="${config.bgColor}"/>`);
+            
+            // Letter outlines group
+            if (config.showOutline && letterBounds.length > 0) {
+                svgParts.push(`  <g id="outlines" fill="none" stroke="rgb(200,200,200)" stroke-width="1">`);
+                for (let letterData of letterBounds) {
+                    let pts = letterData.points;
+                    if (pts.length < 2) continue;
+                    let d = `M ${pts[0].x.toFixed(2)} ${pts[0].y.toFixed(2)}`;
+                    for (let i = 1; i < pts.length; i++) {
+                        d += ` L ${pts[i].x.toFixed(2)} ${pts[i].y.toFixed(2)}`;
+                    }
+                    d += ' Z';
+                    svgParts.push(`    <path d="${d}"/>`);
+                }
+                svgParts.push(`  </g>`);
+            }
+            
+            // Particles group
+            svgParts.push(`  <g id="particles">`);
+            
+            for (let p of particles) {
+                // Convert p5 color to rgba string
+                let c = color(p.color);
+                let r = Math.round(red(c));
+                let g = Math.round(green(c));
+                let b = Math.round(blue(c));
+                let a = (p.opacity / 255).toFixed(3);
+                let fill = `rgba(${r},${g},${b},${a})`;
+                
+                let deg = (p.rotation * 180 / Math.PI).toFixed(3);
+                let tx = p.x.toFixed(2);
+                let ty = p.y.toFixed(2);
+                let transform = `translate(${tx},${ty}) rotate(${deg})`;
+                
+                switch(p.type) {
+                    case 'dots': {
+                        let radius = (p.size / 2).toFixed(2);
+                        svgParts.push(`    <circle r="${radius}" fill="${fill}" transform="${transform}"/>`);
+                        break;
+                    }
+                    case 'lines': {
+                        let halfLen = (p.length / 2).toFixed(2);
+                        let sw = (p.size * 0.4).toFixed(2);
+                        svgParts.push(`    <line x1="-${halfLen}" y1="0" x2="${halfLen}" y2="0" stroke="${fill}" stroke-width="${sw}" transform="${transform}"/>`);
+                        break;
+                    }
+                    case 'rectangles': {
+                        // Use fixed size variation for SVG (same as visual)
+                        let w = (p.size * 1.15).toFixed(2);
+                        let h = (p.size * 1.15).toFixed(2);
+                        let x = (-p.size * 1.15 / 2).toFixed(2);
+                        let y = (-p.size * 1.15 / 2).toFixed(2);
+                        svgParts.push(`    <rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${fill}" transform="${transform}"/>`);
+                        break;
+                    }
+                    case 'polygons': {
+                        let sides = p.sides || 6;
+                        let pts = [];
+                        for (let i = 0; i < sides; i++) {
+                            let angle = (Math.PI * 2 / sides) * i - Math.PI / 2;
+                            let px = (Math.cos(angle) * p.size).toFixed(2);
+                            let py = (Math.sin(angle) * p.size).toFixed(2);
+                            pts.push(`${px},${py}`);
+                        }
+                        svgParts.push(`    <polygon points="${pts.join(' ')}" fill="${fill}" transform="${transform}"/>`);
+                        break;
+                    }
+                    default: {
+                        // Fallback: dot
+                        let radius = (p.size / 2).toFixed(2);
+                        svgParts.push(`    <circle r="${radius}" fill="${fill}" transform="${transform}"/>`);
+                    }
+                }
+            }
+            
+            svgParts.push(`  </g>`);
+            svgParts.push(`</svg>`);
+            
+            let svgString = svgParts.join('\n');
+            let blob = new Blob([svgString], { type: 'image/svg+xml' });
+            let url = URL.createObjectURL(blob);
+            let link = document.createElement('a');
+            link.download = 'grainotype.svg';
+            link.href = url;
+            link.click();
+            URL.revokeObjectURL(url);
+            console.log(`SVG export complete: ${particles.length} particles`);
         }
     </script>
 </body>
