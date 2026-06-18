@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Orbital Fields</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300;400;700;800&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Martian Mono',monospace!important; }
+body { background:#0a0a0a; color:#fff; display:flex; height:100vh; overflow:hidden; padding:20px; gap:20px; }
+
+#canvas-container { flex:1; display:flex; justify-content:center; align-items:center; padding:20px; background:#000; overflow:hidden; border-radius:12px; border:1px solid #222; }
+canvas { max-width:100%; max-height:100%; object-fit:contain; display:block; }
+
+#controls { background:#111; width:400px; min-width:400px; height:100%; overflow:hidden; border:1px solid #222; border-radius:16px; box-shadow:0 10px 40px rgba(0,0,0,.6); display:flex; flex-direction:column; }
+#cc { flex:1; overflow-y:auto; padding:22px; padding-bottom:8px; }
+#cc::-webkit-scrollbar { display:none; }
+
+.section { margin-bottom:22px; padding-bottom:18px; border-bottom:1px solid #222; }
+.section:last-child { border-bottom:none; margin-bottom:0; }
+.section-title { font-size:12px; font-weight:800; margin-bottom:14px; text-transform:uppercase; letter-spacing:.5px; }
+.ctrl { margin-bottom:12px; }
+label { font-size:10px; color:#888; text-transform:uppercase; display:block; margin-bottom:5px; font-weight:300; }
+input[type=range] { width:100%; accent-color:#fff; cursor:pointer; }
+input[type=number] { background:#1a1a1a; border:1px solid #333; color:#fff; padding:8px 8px; border-radius:6px; font-size:12px; width:100%; text-align:center; }
+input[type=number]:focus { outline:none; border-color:#555; }
+input[type=color] { width:100%; height:32px; border:1px solid #333; cursor:pointer; background:#1a1a1a; border-radius:6px; }
+.val { color:#fff; font-weight:700; float:right; font-size:10px; }
+
+.tabs { display:flex; background:#1a1a1a; border-radius:6px; overflow:hidden; border:1px solid #333; }
+.tab { flex:1; padding:8px 4px; font-size:9px; font-weight:700; text-transform:uppercase; text-align:center; cursor:pointer; color:#555; transition:all .15s; letter-spacing:.2px; }
+.tab.active { background:#fff; color:#000; }
+.tab3 { flex:0 0 calc(33.333% - 3px); }
+
+.ptabs { display:flex; flex-wrap:wrap; gap:4px; }
+.ptab { flex:0 0 calc(33.33% - 3px); padding:7px 4px; font-size:8px; font-weight:700; text-transform:uppercase; text-align:center; cursor:pointer; color:#555; background:#1a1a1a; border:1px solid #333; border-radius:5px; transition:all .15s; }
+.ptab.active { background:#fff; color:#000; border-color:#fff; }
+
+.check-row { display:flex; align-items:center; gap:8px; font-size:10px; color:#888; cursor:pointer; margin-bottom:10px; }
+input[type=checkbox] { accent-color:#fff; cursor:pointer; }
+
+.prow { display:flex; gap:5px; margin-bottom:10px; flex-wrap:wrap; }
+.preset { padding:5px 8px; font-size:9px; background:#1a1a1a; border:1px solid #333; color:#555; cursor:pointer; border-radius:4px; text-transform:uppercase; }
+.preset:hover { border-color:#666; color:#fff; }
+
+/* Linked triple inputs */
+.triple { display:flex; gap:8px; align-items:flex-end; margin-bottom:12px; }
+.triple .t-item { flex:1; display:flex; flex-direction:column; gap:5px; }
+.triple label { margin-bottom:0; }
+.triple-divider { font-size:9px; color:#333; padding-bottom:10px; }
+
+.two-col { display:flex; gap:10px; }
+.two-col .cp { flex:1; }
+.color-row { display:flex; gap:10px; }
+.color-item { flex:1; }
+
+.hint { font-size:9px; color:#444; margin-top:3px; }
+
+#controls-footer { padding:16px 22px; border-top:1px solid #222; display:flex; flex-direction:column; gap:8px; }
+.btn-row { display:flex; gap:8px; }
+.btn { flex:1; padding:10px 6px; border-radius:6px; cursor:pointer; font-family:'Martian Mono',monospace; font-size:9px; text-transform:uppercase; font-weight:700; border:none; }
+.btn-p { background:#fff; color:#000; }
+.btn-p:hover { background:#ddd; }
+.btn-s { background:#1a1a1a; color:#666; border:1px solid #2a2a2a; }
+.btn-s:hover { background:#222; color:#ccc; }
+.btn-d { background:#1a1a1a; color:#666; border:1px solid #2a2a2a; }
+.btn-d:hover { background:#200; color:#f88; border-color:#500; }
+</style>
+</head>
+<body>
+
+<div id="canvas-container"><canvas id="canvas"></canvas></div>
+
+<div id="controls">
+<div id="cc">
+
+<!-- CANVAS -->
+<div class="section">
+  <div class="section-title">Canvas</div>
+  <div class="prow">
+    <button class="preset" onclick="setCanvas(1080,1080)">1:1</button>
+    <button class="preset" onclick="setCanvas(1080,1350)">4:5</button>
+    <button class="preset" onclick="setCanvas(1080,1920)">Story</button>
+    <button class="preset" onclick="setCanvas(1920,1080)">16:9</button>
+  </div>
+  <div class="two-col" style="margin-bottom:12px">
+    <div class="cp"><label>Width (px)</label><input type="number" id="cW" value="1080" min="100" max="4000" step="10" oninput="draw()"></div>
+    <div class="cp"><label>Height (px)</label><input type="number" id="cH" value="1080" min="100" max="4000" step="10" oninput="draw()"></div>
+  </div>
+  <div class="color-row">
+    <div class="color-item"><label>Background</label><input type="color" id="bgColor" value="#ffffff"></div>
+    <div class="color-item"><label>Stroke</label><input type="color" id="strokeColor" value="#003B6F"></div>
+  </div>
+</div>
+
+<!-- PLACEMENT -->
+<div class="section">
+  <div class="section-title">Placement</div>
+
+  <div class="ctrl">
+    <div class="tabs">
+      <div class="tab active" id="tab-grid" onclick="setMode('grid')">Grid</div>
+      <div class="tab" id="tab-random" onclick="setMode('random')">Random</div>
+      <div class="tab" id="tab-pattern" onclick="setMode('pattern')">Pattern</div>
+    </div>
+  </div>
+
+  <!-- ── GRID ── -->
+  <div id="m-grid">
+    <!-- Linked Count / Cols / Rows -->
+    <div class="triple">
+      <div class="t-item">
+        <label>Count</label>
+        <input type="number" id="gCount" value="9" min="1" max="2000" step="1" oninput="onCountChange()">
+      </div>
+      <div class="t-item">
+        <label>Cols</label>
+        <input type="number" id="gCols" value="3" min="1" max="50" step="1" oninput="onColsChange()">
+      </div>
+      <div class="t-item">
+        <label>Rows</label>
+        <input type="number" id="gRows" value="3" min="1" max="50" step="1" oninput="onRowsChange()">
+      </div>
+    </div>
+    <div class="hint" id="systems-hint" style="margin-top:-8px;margin-bottom:10px;">9 systems × 1 arc = 9 total circles</div>
+
+    <div class="ctrl"><label>Spacing X <span class="val" id="v-sX">360</span></label><input type="range" id="sX" min="0" max="1200" value="360" step="2"></div>
+    <div class="ctrl"><label>Spacing Y <span class="val" id="v-sY">360</span></label><input type="range" id="sY" min="0" max="1200" value="360" step="2"></div>
+
+    <div class="ctrl"><label>Last Row Fill</label>
+      <div class="tabs">
+        <div class="tab active" id="lf-left"   onclick="setLastFill('left')">Left</div>
+        <div class="tab"        id="lf-center" onclick="setLastFill('center')">Center</div>
+        <div class="tab"        id="lf-right"  onclick="setLastFill('right')">Right</div>
+      </div>
+    </div>
+    <div class="ctrl"><label>Alignment</label>
+      <div class="tabs">
+        <div class="tab"        id="al-left"   onclick="setAlign('left')">Left</div>
+        <div class="tab active" id="al-center" onclick="setAlign('center')">Center</div>
+        <div class="tab"        id="al-right"  onclick="setAlign('right')">Right</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RANDOM ── -->
+  <div id="m-random" style="display:none">
+    <div class="ctrl"><label>Count</label><input type="number" id="rN" value="20" min="1" max="500" step="1" oninput="draw()"></div>
+  </div>
+
+  <!-- ── PATTERN ── -->
+  <div id="m-pattern" style="display:none">
+    <div class="ctrl">
+      <label>Pattern Type</label>
+      <div class="ptabs">
+        <div class="ptab active" id="pt-ring"   onclick="setPType('ring')">Ring</div>
+        <div class="ptab"        id="pt-spiral" onclick="setPType('spiral')">Spiral</div>
+        <div class="ptab"        id="pt-hex"    onclick="setPType('hex')">Hexagonal</div>
+        <div class="ptab"        id="pt-conc"   onclick="setPType('conc')">Concentric</div>
+        <div class="ptab"        id="pt-mand"   onclick="setPType('mand')">Mandala</div>
+      </div>
+    </div>
+
+    <div id="pt-ring-c">
+      <div class="two-col" style="margin-bottom:12px">
+        <div class="cp"><label>Systems</label><input type="number" id="pRingN" value="8" min="2" max="200" step="1" oninput="draw()"></div>
+        <div class="cp"><label>Radius</label><input type="number" id="pRingR" value="300" min="10" max="800" step="5" oninput="draw()"></div>
+      </div>
+      <div class="ctrl"><label>Rotation ° <span class="val" id="v-rRot">0</span></label><input type="range" id="rRot" min="0" max="360" value="0" step="1"></div>
+    </div>
+
+    <div id="pt-spiral-c" style="display:none">
+      <div class="two-col" style="margin-bottom:12px">
+        <div class="cp"><label>Systems</label><input type="number" id="pSpN" value="89" min="5" max="600" step="1" oninput="draw()"></div>
+        <div class="cp"><label>Scale</label><input type="number" id="pSpScale" value="18" min="1" max="100" step="1" oninput="draw()"></div>
+      </div>
+      <div class="ctrl"><label>Rotation ° <span class="val" id="v-spRot">0</span></label><input type="range" id="spRot" min="0" max="360" value="0" step="1"></div>
+    </div>
+
+    <div id="pt-hex-c" style="display:none">
+      <div class="two-col" style="margin-bottom:12px">
+        <div class="cp"><label>Layers</label><input type="number" id="pHexL" value="3" min="1" max="10" step="1" oninput="draw()"></div>
+        <div class="cp"><label>Spacing</label><input type="number" id="pHexS" value="140" min="10" max="500" step="5" oninput="draw()"></div>
+      </div>
+    </div>
+
+    <div id="pt-conc-c" style="display:none">
+      <div class="two-col" style="margin-bottom:12px">
+        <div class="cp"><label>Rings</label><input type="number" id="pConcR" value="4" min="1" max="12" step="1" oninput="draw()"></div>
+        <div class="cp"><label>Base Systems</label><input type="number" id="pConcN" value="6" min="2" max="30" step="1" oninput="draw()"></div>
+      </div>
+      <div class="two-col" style="margin-bottom:12px">
+        <div class="cp"><label>Inner Radius</label><input type="number" id="pConcIR" value="80" min="10" max="500" step="5" oninput="draw()"></div>
+        <div class="cp"><label>Ring Spacing</label><input type="number" id="pConcRS" value="100" min="10" max="400" step="5" oninput="draw()"></div>
+      </div>
+      <div class="ctrl"><label>Rotation ° <span class="val" id="v-cRot">0</span></label><input type="range" id="cRot" min="0" max="360" value="0" step="1"></div>
+    </div>
+
+    <div id="pt-mand-c" style="display:none">
+      <div class="two-col" style="margin-bottom:12px">
+        <div class="cp"><label>Folds</label><input type="number" id="pMandF" value="6" min="2" max="24" step="1" oninput="draw()"></div>
+        <div class="cp"><label>Layers</label><input type="number" id="pMandL" value="4" min="1" max="16" step="1" oninput="draw()"></div>
+      </div>
+      <div class="two-col" style="margin-bottom:12px">
+        <div class="cp"><label>Spacing</label><input type="number" id="pMandS" value="90" min="10" max="400" step="5" oninput="draw()"></div>
+      </div>
+      <div class="ctrl"><label>Interleave</label>
+        <div class="tabs"><div class="tab active" id="mi-off" onclick="setMInt(false)">Off</div><div class="tab" id="mi-on" onclick="setMInt(true)">On</div></div>
+      </div>
+      <div class="ctrl"><label>Rotation ° <span class="val" id="v-mRot">0</span></label><input type="range" id="mRot" min="0" max="360" value="0" step="1"></div>
+    </div>
+
+    <div class="ctrl"><label>Offset X <span class="val" id="v-pOX">0</span></label><input type="range" id="pOX" min="-500" max="500" value="0" step="2"></div>
+    <div class="ctrl"><label>Offset Y <span class="val" id="v-pOY">0</span></label><input type="range" id="pOY" min="-500" max="500" value="0" step="2"></div>
+
+    <div class="hint" id="pattern-hint">8 systems × 1 arc = 8 total circles</div>
+  </div>
+
+  <!-- shared -->
+  <div class="ctrl" style="margin-top:10px"><label>Jitter <span class="val" id="v-jitter">0</span></label><input type="range" id="jitter" min="0" max="400" value="0" step="2"></div>
+  <div class="ctrl"><label>Seed <span class="val" id="v-seed">42</span></label><input type="range" id="seed" min="1" max="999" value="42" step="1"></div>
+</div>
+
+<!-- CIRCLE -->
+<div class="section">
+  <div class="section-title">Circle</div>
+  <div class="ctrl"><label>Arcs per System <span class="val" id="v-numArcs">1</span></label><input type="range" id="numArcs" min="1" max="20" value="1" step="1"></div>
+  <div class="ctrl"><label>Radius <span class="val" id="v-radius">120</span></label><input type="range" id="radius" min="2" max="800" value="120" step="2"></div>
+  <div class="ctrl"><label>Ring Spacing <span class="val" id="v-ringSpacing">40</span></label>
+    <input type="range" id="ringSpacing" min="0" max="400" value="40" step="1">
+    <div class="hint">Distance between arcs when Arcs per System &gt; 1</div>
+  </div>
+  <div class="ctrl"><label>Drift X <span class="val" id="v-dX">0</span></label><input type="range" id="dX" min="-200" max="200" value="0" step="1"></div>
+  <div class="ctrl"><label>Drift Y <span class="val" id="v-dY">0</span></label><input type="range" id="dY" min="-200" max="200" value="0" step="1"></div>
+</div>
+
+<!-- ARC SHAPE -->
+<div class="section">
+  <div class="section-title">Arc Shape</div>
+  <div class="ctrl"><label>Completeness % <span class="val" id="v-comp">100</span></label><input type="range" id="comp" min="0" max="100" value="100" step="1"></div>
+  <div class="ctrl"><label>Start Angle ° <span class="val" id="v-startAng">0</span></label><input type="range" id="startAng" min="0" max="360" value="0" step="1"></div>
+  <div class="ctrl"><label>Stroke Width <span class="val" id="v-sw">3.0</span></label><input type="range" id="sw" min="0" max="40" value="3" step=".5"></div>
+  <label class="check-row"><input type="checkbox" id="isEll"> Ellipse Mode</label>
+  <div id="ell-c" style="display:none">
+    <div class="ctrl"><label>Y Ratio <span class="val" id="v-ellR">0.70</span></label><input type="range" id="ellR" min=".05" max="1" value=".7" step=".01"></div>
+    <div class="ctrl"><label>Ellipse Angle ° <span class="val" id="v-ellA">23</span></label><input type="range" id="ellA" min="0" max="360" value="23" step="1"></div>
+  </div>
+</div>
+
+<!-- FILL -->
+<div class="section">
+  <div class="section-title">Fill</div>
+  <label class="check-row"><input type="checkbox" id="doFill"> Fill Circles</label>
+  <div id="fill-c" style="display:none">
+    <div class="ctrl"><label>Fill Color</label><input type="color" id="fillColor" value="#003B6F"></div>
+    <div class="ctrl"><label>Opacity <span class="val" id="v-fillOp">1.00</span></label><input type="range" id="fillOp" min="0" max="1" value="1" step=".01"></div>
+  </div>
+</div>
+
+<!-- CENTERS -->
+<div class="section">
+  <div class="section-title">Centers</div>
+  <label class="check-row"><input type="checkbox" id="showDots"> Show Center Dots</label>
+  <div id="dots-c" style="display:none">
+    <div class="ctrl"><label>Dot Size <span class="val" id="v-dotSz">4.0</span></label><input type="range" id="dotSz" min="1" max="30" value="4" step=".5"></div>
+    <div class="ctrl"><label>Dot Color</label><input type="color" id="dotColor" value="#ff0000"></div>
+  </div>
+</div>
+
+<!-- VARIATION -->
+<div class="section">
+  <div class="section-title">Variation</div>
+  <div class="ctrl"><label>Completeness ± <span class="val" id="v-vAng">0</span></label><input type="range" id="vAng" min="0" max="100" value="0" step="1"></div>
+  <div class="ctrl"><label>Size ± <span class="val" id="v-vSz">0</span></label><input type="range" id="vSz" min="0" max="300" value="0" step="2"></div>
+  <div class="ctrl"><label>Opacity ± <span class="val" id="v-vOp">0.00</span></label><input type="range" id="vOp" min="0" max="1" value="0" step=".01"></div>
+  <div class="ctrl"><label>Stroke ± <span class="val" id="v-vSw">0.0</span></label><input type="range" id="vSw" min="0" max="20" value="0" step=".5"></div>
+</div>
+
+</div><!-- /cc -->
+
+<div id="controls-footer">
+  <div class="btn-row">
+    <button class="btn btn-s" onclick="randomize()">Randomize</button>
+    <button class="btn btn-d" onclick="resetAll()">Reset</button>
+  </div>
+  <div class="btn-row">
+    <button class="btn btn-p" onclick="exportPNG()">Export PNG</button>
+    <button class="btn btn-p" onclick="exportSVG()">Export SVG</button>
+  </div>
+</div>
+</div>
+
+<script>
+// ─── State ────────────────────────────────────────────────────────────────
+let mode = 'grid';
+let alignH = 'center';
+let lastFill = 'left';
+let pType = 'ring';
+let mandInt = false;
+
+// ─── RNG ─────────────────────────────────────────────────────────────────
+function mkRng(seed) {
+  let s = seed >>> 0;
+  return () => { s = Math.imul(1664525,s)+1013904223>>>0; return s/4294967296; };
+}
+
+// ─── Helpers ─────────────────────────────────────────────────────────────
+const gv = id => parseFloat(document.getElementById(id).value) || 0;
+const gi = id => parseInt(document.getElementById(id).value) || 0;
+const gc = id => document.getElementById(id).value;
+const gb = id => document.getElementById(id).checked;
+const se = (id,v) => { const e=document.getElementById(id); if(e) e.value=v; };
+
+// ─── Mode switches ────────────────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  ['grid','random','pattern'].forEach(x => {
+    document.getElementById('tab-'+x).classList.toggle('active',x===m);
+    document.getElementById('m-'+x).style.display = x===m?'block':'none';
+  });
+  draw();
+}
+
+function setAlign(a) {
+  alignH = a;
+  ['left','center','right'].forEach(x=>document.getElementById('al-'+x).classList.toggle('active',x===a));
+  draw();
+}
+
+function setLastFill(a) {
+  lastFill = a;
+  ['left','center','right'].forEach(x=>document.getElementById('lf-'+x).classList.toggle('active',x===a));
+  draw();
+}
+
+function setPType(t) {
+  pType = t;
+  ['ring','spiral','hex','conc','mand'].forEach(x=>{
+    document.getElementById('pt-'+x).classList.toggle('active',x===t);
+    document.getElementById('pt-'+x+'-c').style.display = x===t?'block':'none';
+  });
+  draw();
+}
+
+function setMInt(v) {
+  mandInt = v;
+  document.getElementById('mi-off').classList.toggle('active',!v);
+  document.getElementById('mi-on').classList.toggle('active',v);
+  draw();
+}
+
+function setCanvas(w,h) { se('cW',w); se('cH',h); draw(); }
+
+// ─── Pattern systems count (for live hint) ───────────────────────────────
+function calcPatternSystems() {
+  if (pType==='ring')   return Math.max(2, gi('pRingN'));
+  if (pType==='spiral') return Math.max(1, gi('pSpN'));
+  if (pType==='hex') {
+    const L = Math.max(1, gi('pHexL'));
+    let n = 0;
+    for (let q=-L;q<=L;q++) {
+      const rMin=Math.max(-L,-q-L), rMax=Math.min(L,-q+L);
+      n += (rMax-rMin+1);
+    }
+    return n;
+  }
+  if (pType==='conc') {
+    const rings = Math.max(1, gi('pConcR'));
+    const bn = Math.max(2, gi('pConcN'));
+    let n = 0;
+    for (let k=0;k<rings;k++) n += Math.round(bn*(k+1));
+    return n;
+  }
+  if (pType==='mand') {
+    const folds = Math.max(2, gi('pMandF'));
+    const layers = Math.max(1, gi('pMandL'));
+    return folds*layers*(mandInt?2:1);
+  }
+  return 1;
+}
+
+function updatePatternHint() {
+  const systems = calcPatternSystems();
+  const arcs = Math.max(1, Math.round(gv('numArcs')));
+  const d = document.getElementById('pattern-hint');
+  if (d) d.textContent = `${systems} system${systems!==1?'s':''} × ${arcs} arc${arcs!==1?'s':''} = ${systems*arcs} total circles`;
+}
+
+// ─── Linked Count / Cols / Rows / Arcs ───────────────────────────────────
+// Count = total visible arcs (circles drawn on canvas)
+// Systems = floor(Count / ArcsPerSystem) = number of placement centers
+// Rows = ceil(Systems / Cols) — auto-derived
+
+function getSystemsCount() {
+  const count = Math.max(1, gi('gCount'));
+  const arcs  = Math.max(1, Math.round(gv('numArcs')));
+  return Math.max(1, Math.floor(count / arcs));
+}
+
+function updateSystemsHint() {
+  const count   = Math.max(1, gi('gCount'));
+  const arcs    = Math.max(1, Math.round(gv('numArcs')));
+  const systems = Math.max(1, Math.floor(count / arcs));
+  const total   = systems * arcs;
+  const d = document.getElementById('systems-hint');
+  if (d) d.textContent = `${systems} system${systems!==1?'s':''} × ${arcs} arc${arcs!==1?'s':''} = ${total} total circles`;
+}
+
+function onCountChange() {
+  const cols = Math.max(1, gi('gCols'));
+  se('gRows', Math.ceil(getSystemsCount() / cols));
+  updateSystemsHint();
+  draw();
+}
+
+function onColsChange() {
+  const cols = Math.max(1, gi('gCols'));
+  se('gRows', Math.ceil(getSystemsCount() / cols));
+  updateSystemsHint();
+  draw();
+}
+
+function onRowsChange() {
+  const rows = Math.max(1, gi('gRows'));
+  const cols = Math.max(1, gi('gCols'));
+  const arcs = Math.max(1, Math.round(gv('numArcs')));
+  // Rows edited → back-calculate count
+  se('gCount', rows * cols * arcs);
+  updateSystemsHint();
+  draw();
+}
+
+function onArcsChange() {
+  // Arcs per system changed → systems count changes → update rows
+  const cols = Math.max(1, gi('gCols'));
+  se('gRows', Math.ceil(getSystemsCount() / cols));
+  updateSystemsHint();
+  draw();
+}
+
+// ─── Centers ──────────────────────────────────────────────────────────────
+function getCenters(W,H) {
+  if (mode==='grid')    return cenGrid(W,H);
+  if (mode==='random')  return cenRandom(W,H);
+  if (mode==='pattern') return cenPattern(W,H);
+}
+
+function cenGrid(W,H) {
+  const seed  = Math.round(gv('seed'));
+  const jr    = mkRng(seed+100);
+  const count = Math.max(1, gi('gCount'));
+  const cols  = Math.max(1, gi('gCols'));
+  const arcs  = Math.max(1, Math.round(gv('numArcs')));
+  const systems = Math.max(1, Math.floor(count / arcs));
+  const rows  = Math.ceil(systems / cols);
+  const lastN = systems % cols || cols;
+  const sx = gv('sX'), sy = gv('sY');
+  const j  = gv('jitter');
+  const gw = (cols-1)*sx, gh = (rows-1)*sy;
+  let x0 = alignH==='left'?0:alignH==='right'?W-gw:(W-gw)/2;
+  const y0 = (H-gh)/2;
+  const cs = [];
+  for (let r=0;r<rows;r++) {
+    const isLast = r===rows-1;
+    const nc = isLast ? lastN : cols;
+    const pw = (nc-1)*sx;
+    let lx = x0;
+    if (isLast && nc<cols) {
+      if (lastFill==='left')   lx = x0;
+      else if (lastFill==='right') lx = x0+gw-pw;
+      else lx = x0+(gw-pw)/2;
+    }
+    for (let c=0;c<nc;c++)
+      cs.push({x:lx+c*sx+(jr()-.5)*2*j, y:y0+r*sy+(jr()-.5)*2*j});
+  }
+  return cs;
+}
+
+function cenRandom(W,H) {
+  const seed = Math.round(gv('seed'));
+  const r = mkRng(seed), jr = mkRng(seed+100);
+  const n = Math.max(1, gi('rN'));
+  const j = gv('jitter');
+  return Array.from({length:n},()=>({x:r()*W+(jr()-.5)*2*j, y:r()*H+(jr()-.5)*2*j}));
+}
+
+function cenPattern(W,H) {
+  const seed = Math.round(gv('seed'));
+  const jr = mkRng(seed+100);
+  const j  = gv('jitter');
+  const cx = W/2+gv('pOX'), cy = H/2+gv('pOY');
+  const jt = ()=>({dx:(jr()-.5)*2*j, dy:(jr()-.5)*2*j});
+  const cs = [];
+
+  if (pType==='ring') {
+    const n   = Math.max(2, gi('pRingN'));
+    const r   = gv('pRingR');
+    const rot = gv('rRot')*Math.PI/180;
+    for (let i=0;i<n;i++) {
+      const a=rot+2*Math.PI*i/n, p=jt();
+      cs.push({x:cx+r*Math.cos(a)+p.dx, y:cy+r*Math.sin(a)+p.dy});
+    }
+  }
+
+  else if (pType==='spiral') {
+    const n   = Math.max(1, gi('pSpN'));
+    const sc  = Math.max(1, gv('pSpScale'));
+    const rot = gv('spRot')*Math.PI/180;
+    const GA  = Math.PI*(3-Math.sqrt(5));
+    for (let i=0;i<n;i++) {
+      const r=sc*Math.sqrt(i+1), a=rot+i*GA, p=jt();
+      cs.push({x:cx+r*Math.cos(a)+p.dx, y:cy+r*Math.sin(a)+p.dy});
+    }
+  }
+
+  else if (pType==='hex') {
+    const L  = Math.max(1, gi('pHexL'));
+    const sp = Math.max(1, gv('pHexS'));
+    for (let q=-L;q<=L;q++) {
+      const rMin=Math.max(-L,-q-L), rMax=Math.min(L,-q+L);
+      for (let r=rMin;r<=rMax;r++) {
+        const p=jt();
+        cs.push({x:cx+sp*(q+r*.5)+p.dx, y:cy+sp*r*(Math.sqrt(3)/2)+p.dy});
+      }
+    }
+  }
+
+  else if (pType==='conc') {
+    const rings = Math.max(1, gi('pConcR'));
+    const ir    = gv('pConcIR');
+    const rs    = gv('pConcRS');
+    const bn    = Math.max(2, gi('pConcN'));
+    const rot   = gv('cRot')*Math.PI/180;
+    for (let k=0;k<rings;k++) {
+      const r = ir+k*rs;
+      const n = Math.round(bn*(k+1)); // proportional to ring index
+      for (let i=0;i<n;i++) {
+        const a=rot+2*Math.PI*i/n, p=jt();
+        cs.push({x:cx+r*Math.cos(a)+p.dx, y:cy+r*Math.sin(a)+p.dy});
+      }
+    }
+  }
+
+  else if (pType==='mand') {
+    const folds  = Math.max(2, gi('pMandF'));
+    const layers = Math.max(1, gi('pMandL'));
+    const sp     = Math.max(1, gv('pMandS'));
+    const rot    = gv('mRot')*Math.PI/180;
+    for (let arm=0;arm<folds;arm++) {
+      const baseA = rot+2*Math.PI*arm/folds;
+      for (let l=1;l<=layers;l++) {
+        const p=jt();
+        cs.push({x:cx+l*sp*Math.cos(baseA)+p.dx, y:cy+l*sp*Math.sin(baseA)+p.dy});
+      }
+      if (mandInt) {
+        const midA = baseA+Math.PI/folds;
+        for (let l=1;l<=layers;l++) {
+          const r=(l-.5)*sp, p=jt();
+          cs.push({x:cx+r*Math.cos(midA)+p.dx, y:cy+r*Math.sin(midA)+p.dy});
+        }
+      }
+    }
+  }
+
+  return cs;
+}
+
+// ─── Arc SVG path ─────────────────────────────────────────────────────────
+function arcPath(cx,cy,rx,ry,rot,sa,ea) {
+  const span=ea-sa, rd=(rot*180/Math.PI).toFixed(3);
+  const cR=Math.cos(rot),sR=Math.sin(rot);
+  const pt=a=>{const x=rx*Math.cos(a),y=ry*Math.sin(a);return[cx+x*cR-y*sR,cy+x*sR+y*cR];};
+  const f=n=>n.toFixed(3);
+  if (Math.abs(span)>=2*Math.PI-.001) {
+    const[x1,y1]=pt(sa),[x2,y2]=pt(sa+Math.PI);
+    return `M ${f(x1)},${f(y1)} A ${f(rx)},${f(ry)} ${rd} 0 1 ${f(x2)},${f(y2)} A ${f(rx)},${f(ry)} ${rd} 0 1 ${f(x1)},${f(y1)} Z`;
+  }
+  const[x1,y1]=pt(sa),[x2,y2]=pt(ea);
+  return `M ${f(x1)},${f(y1)} A ${f(rx)},${f(ry)} ${rd} ${Math.abs(span)>Math.PI?1:0} ${span>0?1:0} ${f(x2)},${f(y2)}`;
+}
+
+// ─── Config ───────────────────────────────────────────────────────────────
+function cfg() {
+  return {
+    numArcs:Math.max(1,Math.round(gv('numArcs'))), radius:gv('radius'), ringSpacing:gv('ringSpacing'),
+    dX:gv('dX'), dY:gv('dY'),
+    comp:gv('comp')/100, startAng:gv('startAng')*Math.PI/180, sw:gv('sw'),
+    isEll:gb('isEll'), ellR:gv('ellR'), ellA:gv('ellA')*Math.PI/180,
+    doFill:gb('doFill'), fillColor:gc('fillColor'), fillOp:gv('fillOp'),
+    showDots:gb('showDots'), dotSz:gv('dotSz'), dotColor:gc('dotColor'),
+    vAng:gv('vAng')/100, vSz:gv('vSz'), vOp:gv('vOp'), vSw:gv('vSw'),
+    strokeColor:gc('strokeColor'),
+  };
+}
+
+// ─── Draw ─────────────────────────────────────────────────────────────────
+function draw() {
+  if (mode==='pattern') updatePatternHint();
+  const cv = document.getElementById('canvas');
+  const W = Math.max(100,Math.round(gv('cW'))), H = Math.max(100,Math.round(gv('cH')));
+  cv.width=W; cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle=gc('bgColor'); ctx.fillRect(0,0,W,H);
+
+  const p=cfg(), vr=mkRng(Math.round(gv('seed'))+500), cs=getCenters(W,H);
+
+  for (const c of cs) {
+    for (let i=0;i<p.numArcs;i++) {
+      const baseR = Math.max(1, p.radius + i*p.ringSpacing);
+      const r  = Math.max(1, baseR + (vr()-.5)*2*p.vSz);
+      const rx=r, ry=p.isEll?r*p.ellR:r, rot=p.isEll?p.ellA:0;
+      const span=2*Math.PI*Math.max(0,Math.min(1,p.comp+(vr()-.5)*2*p.vAng));
+      const sa=p.startAng, ea=sa+span;
+      const ox=c.x+i*p.dX, oy=c.y+i*p.dY;
+      const op=Math.max(0,Math.min(1,1-vr()*p.vOp));
+      const w=Math.max(0,p.sw+(vr()-.5)*2*p.vSw);
+
+      ctx.save(); ctx.translate(ox,oy); ctx.rotate(rot);
+      if (p.doFill) {
+        ctx.globalAlpha=p.fillOp; ctx.fillStyle=p.fillColor;
+        ctx.beginPath(); ctx.ellipse(0,0,rx,ry,0,sa,ea,false);
+        if (span<2*Math.PI) ctx.closePath(); ctx.fill();
+      }
+      if (w>0) {
+        ctx.globalAlpha=op; ctx.strokeStyle=p.strokeColor;
+        ctx.lineWidth=w; ctx.lineCap='round';
+        ctx.beginPath(); ctx.ellipse(0,0,rx,ry,0,sa,ea,false); ctx.stroke();
+      }
+      ctx.restore();
+    }
+    if (p.showDots) {
+      ctx.globalAlpha=1; ctx.fillStyle=p.dotColor;
+      ctx.beginPath(); ctx.arc(c.x,c.y,p.dotSz,0,2*Math.PI); ctx.fill();
+    }
+  }
+}
+
+// ─── Exports ──────────────────────────────────────────────────────────────
+function exportSVG() {
+  const W=Math.max(100,Math.round(gv('cW'))), H=Math.max(100,Math.round(gv('cH')));
+  const p=cfg(), vr=mkRng(Math.round(gv('seed'))+500), cs=getCenters(W,H);
+  let out=`<rect width="${W}" height="${H}" fill="${gc('bgColor')}"/>\n`;
+  for (const c of cs) {
+    for (let i=0;i<p.numArcs;i++) {
+      const baseR=Math.max(1,p.radius+i*p.ringSpacing);
+      const r=Math.max(1,baseR+(vr()-.5)*2*p.vSz);
+      const rx=r, ry=p.isEll?r*p.ellR:r, rot=p.isEll?p.ellA:0;
+      const span=2*Math.PI*Math.max(0,Math.min(1,p.comp+(vr()-.5)*2*p.vAng));
+      const sa=p.startAng, ea=sa+span;
+      const ox=c.x+i*p.dX, oy=c.y+i*p.dY;
+      const op=Math.max(0,Math.min(1,1-vr()*p.vOp));
+      const w=Math.max(0,p.sw+(vr()-.5)*2*p.vSw);
+      const d=arcPath(ox,oy,rx,ry,rot,sa,ea);
+      if(p.doFill) out+=`<path d="${d}" fill="${p.fillColor}" fill-opacity="${p.fillOp.toFixed(3)}" stroke="none"/>\n`;
+      if(w>0) out+=`<path d="${d}" fill="none" stroke="${p.strokeColor}" stroke-width="${w.toFixed(2)}" stroke-linecap="round" opacity="${op.toFixed(3)}"/>\n`;
+    }
+    if(p.showDots) out+=`<circle cx="${c.x.toFixed(2)}" cy="${c.y.toFixed(2)}" r="${p.dotSz}" fill="${p.dotColor}"/>\n`;
+  }
+  const svg=`<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">\n${out}</svg>`;
+  const a=document.createElement('a'); a.download='orbital-fields.svg';
+  a.href=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'})); a.click();
+}
+
+function exportPNG() {
+  const a=document.createElement('a'); a.download='orbital-fields.png';
+  a.href=document.getElementById('canvas').toDataURL('image/png'); a.click();
+}
+
+// ─── Randomize / Reset ────────────────────────────────────────────────────
+function randomize() {
+  const el=document.getElementById('seed');
+  el.value=Math.floor(Math.random()*998)+1;
+  document.getElementById('v-seed').textContent=el.value;
+  draw();
+}
+
+function resetAll() {
+  se('cW',1080); se('cH',1080);
+  se('gCount',9); se('gCols',3); se('gRows',3);
+  se('sX',360); se('sY',360);
+  se('rN',20);
+  se('pRingN',8); se('pRingR',300);
+  se('pSpN',89); se('pSpScale',18);
+  se('pHexL',3); se('pHexS',140);
+  se('pConcR',4); se('pConcN',6); se('pConcIR',80); se('pConcRS',100);
+  se('pMandF',6); se('pMandL',4); se('pMandS',90);
+  se('pOX',0); se('pOY',0);
+  se('jitter',0); se('seed',42);
+  se('numArcs',1); se('radius',120); se('ringSpacing',40); se('dX',0); se('dY',0);
+  se('comp',100); se('startAng',0); se('sw',3); se('ellR',.7); se('ellA',23);
+  se('fillColor','#003B6F'); se('fillOp',1);
+  se('dotSz',4); se('dotColor','#ff0000');
+  se('vAng',0); se('vSz',0); se('vOp',0); se('vSw',0);
+  se('bgColor','#ffffff'); se('strokeColor','#003B6F');
+  ['isEll','doFill','showDots'].forEach(id=>document.getElementById(id).checked=false);
+  ['ell-c','fill-c','dots-c'].forEach(id=>document.getElementById(id).style.display='none');
+  setMode('grid'); setAlign('center'); setLastFill('left');
+  setPType('ring'); setMInt(false);
+  refreshDisplays();
+  updateSystemsHint();
+  draw();
+}
+
+// ─── Bind sliders ─────────────────────────────────────────────────────────
+function bind(id,vid,fmt) {
+  const el=document.getElementById(id); if(!el) return;
+  el.addEventListener('input',()=>{
+    const d=document.getElementById(vid);
+    if(d) d.textContent=fmt?fmt(parseFloat(el.value)):el.value;
+    draw();
+  });
+}
+
+function refreshDisplays() {
+  [['sX','v-sX'],['sY','v-sY'],['jitter','v-jitter'],['seed','v-seed'],
+   ['numArcs','v-numArcs'],['radius','v-radius'],['ringSpacing','v-ringSpacing'],
+   ['dX','v-dX'],['dY','v-dY'],['comp','v-comp'],['startAng','v-startAng'],
+   ['ellA','v-ellA'],['pOX','v-pOX'],['pOY','v-pOY'],
+   ['rRot','v-rRot'],['spRot','v-spRot'],['cRot','v-cRot'],['mRot','v-mRot'],
+   ['vAng','v-vAng'],['vSz','v-vSz'],
+  ].forEach(([id,vid])=>{ const e=document.getElementById(id),d=document.getElementById(vid); if(e&&d) d.textContent=e.value; });
+  [['sw','v-sw',v=>v.toFixed(1)],['ellR','v-ellR',v=>v.toFixed(2)],
+   ['fillOp','v-fillOp',v=>v.toFixed(2)],['dotSz','v-dotSz',v=>v.toFixed(1)],
+   ['vOp','v-vOp',v=>v.toFixed(2)],['vSw','v-vSw',v=>v.toFixed(1)],
+  ].forEach(([id,vid,fmt])=>{ const e=document.getElementById(id),d=document.getElementById(vid); if(e&&d) d.textContent=fmt(parseFloat(e.value)); });
+}
+
+['sX','sY','jitter','seed','radius','ringSpacing','dX','dY','comp','startAng',
+ 'ellA','pOX','pOY','rRot','spRot','cRot','mRot','vAng','vSz',
+].forEach(id=>bind(id,'v-'+id));
+
+// numArcs: bind display AND trigger grid relinking
+const numArcsEl = document.getElementById('numArcs');
+numArcsEl.addEventListener('input', () => {
+  document.getElementById('v-numArcs').textContent = numArcsEl.value;
+  if (mode === 'grid') onArcsChange();
+  else draw();
+});
+bind('sw','v-sw',v=>v.toFixed(1));
+bind('ellR','v-ellR',v=>v.toFixed(2));
+bind('fillOp','v-fillOp',v=>v.toFixed(2));
+bind('dotSz','v-dotSz',v=>v.toFixed(1));
+bind('vOp','v-vOp',v=>v.toFixed(2));
+bind('vSw','v-vSw',v=>v.toFixed(1));
+
+['bgColor','strokeColor','fillColor','dotColor'].forEach(id=>
+  document.getElementById(id).addEventListener('input',draw));
+
+document.getElementById('isEll').addEventListener('change',function(){
+  document.getElementById('ell-c').style.display=this.checked?'block':'none'; draw();});
+document.getElementById('doFill').addEventListener('change',function(){
+  document.getElementById('fill-c').style.display=this.checked?'block':'none'; draw();});
+document.getElementById('showDots').addEventListener('change',function(){
+  document.getElementById('dots-c').style.display=this.checked?'block':'none'; draw();});
+
+updateSystemsHint();
+updatePatternHint();
+draw();
+</script>
+</body>
+</html>
