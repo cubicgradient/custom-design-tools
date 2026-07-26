@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Surface</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300;400;700;800&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Martian+Mono:wght@300;400;700;800&display=swap');
+
+  *{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Martian Mono', monospace !important;
+  }
+
+  body{
+    background:#0a0a0a;
+    color:#fff;
+    display:flex;
+    height:100vh;
+    overflow:hidden;
+    padding:20px;
+  }
+
+  /* canvas container */
+  #stage{
+    flex:1;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:20px;
+    background:#000;
+    overflow:hidden;
+    border-radius:12px;
+    border:1px solid #222;
+    position:relative;
+    min-width:0;
+  }
+  #gl{
+    display:block;
+    border:1px solid #333;
+    max-width:100%;
+    max-height:100%;
+    object-fit:contain;
+    background:#f0ede6;
+  }
+  #stagehint{
+    position:absolute;
+    bottom:14px;
+    left:18px;
+    font-size:10px;
+    color:#888;
+    text-transform:uppercase;
+    font-weight:300;
+    pointer-events:none;
+  }
+
+  /* control panel */
+  #panel{
+    background:#111;
+    padding:0;
+    width:420px;
+    flex:0 0 420px;
+    height:100%;
+    overflow:hidden;
+    border:1px solid #222;
+    margin-left:20px;
+    border-radius:16px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.6);
+    display:flex;
+    flex-direction:column;
+  }
+
+  #ptop{
+    padding:25px 25px 0;
+  }
+  #ptop h1{
+    font-size:13px;
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    color:#fff;
+    margin-bottom:15px;
+  }
+  #ptop p{
+    font-size:10px;
+    color:#888;
+    text-transform:uppercase;
+    font-weight:300;
+    line-height:1.7;
+    margin-bottom:6px;
+  }
+
+  /* scrollable content */
+  #scroll{
+    flex:1;
+    overflow-y:auto;
+    padding:25px;
+    padding-bottom:10px;
+  }
+  #scroll::-webkit-scrollbar{display:none}
+  #scroll{scrollbar-width:none}
+
+  /* sections */
+  details{
+    margin-bottom:25px;
+    padding-bottom:20px;
+    border-bottom:1px solid #222;
+  }
+  summary{
+    list-style:none;
+    cursor:pointer;
+    font-size:13px;
+    font-weight:800;
+    margin-bottom:15px;
+    text-transform:uppercase;
+    letter-spacing:0.5px;
+    color:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    user-select:none;
+  }
+  summary::-webkit-details-marker{display:none}
+  summary .chev{
+    color:#888;
+    font-size:11px;
+    font-weight:400;
+    transition:transform .2s;
+  }
+  details[open] summary .chev{transform:rotate(90deg)}
+  .body{padding:0}
+
+  /* mode grid */
+  .modes{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:8px;
+    padding:0 25px 20px;
+    margin-bottom:0;
+    border-bottom:1px solid #222;
+  }
+  .modes button{
+    width:100%;
+    background:#1a1a1a;
+    color:#888;
+    border:1px solid #333;
+    padding:12px 2px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:10px;
+    font-weight:700;
+    text-transform:uppercase;
+    margin-top:0;
+  }
+  .modes button:hover{background:#222;color:#fff}
+  .modes button.on{background:#fff;color:#000;border-color:#fff}
+  .modes button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+  /* controls */
+  .ctl{margin-bottom:14px}
+  .ctl .lab{
+    font-size:10px;
+    color:#888;
+    text-transform:uppercase;
+    display:block;
+    margin-bottom:6px;
+    font-weight:300;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+  }
+  .ctl .val{
+    color:#fff;
+    font-weight:700;
+    font-size:10px;
+  }
+
+  input[type=range]{
+    width:100%;
+    accent-color:#fff;
+    cursor:pointer;
+  }
+
+  input[type=text],
+  input[type=number],
+  select,
+  textarea{
+    width:100%;
+    background:#1a1a1a;
+    border:1px solid #333;
+    color:#fff;
+    padding:10px;
+    border-radius:6px;
+    font-size:11px;
+    outline:none;
+    resize:vertical;
+  }
+  textarea{min-height:80px;line-height:1.6}
+  input:focus,select:focus,textarea:focus{border-color:#444}
+  select{cursor:pointer}
+  input[type=number]{-moz-appearance:textfield}
+
+  input[type=color]{
+    width:100%;
+    height:35px;
+    border:1px solid #333;
+    cursor:pointer;
+    background:#1a1a1a;
+    border-radius:6px;
+  }
+
+  .row{display:flex;gap:10px}
+  .row>*{flex:1}
+
+  .swatch{margin-bottom:14px}
+  .swatch label{
+    font-size:10px;
+    color:#888;
+    text-transform:uppercase;
+    display:block;
+    margin-bottom:6px;
+    font-weight:300;
+  }
+
+  /* segmented */
+  .seg{display:flex;gap:8px}
+  .seg button{
+    flex:1;
+    background:#1a1a1a;
+    color:#888;
+    border:1px solid #333;
+    padding:12px 2px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:10px;
+    font-weight:700;
+    text-transform:uppercase;
+    margin-top:0;
+  }
+  .seg button:hover{background:#222;color:#fff}
+  .seg button.on{background:#fff;color:#000;border-color:#fff}
+
+  /* ratio grid */
+  .ratios{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .ratios button{
+    width:100%;
+    background:#1a1a1a;
+    color:#888;
+    border:1px solid #333;
+    padding:12px 2px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:10px;
+    font-weight:700;
+    margin-top:0;
+  }
+  .ratios button:hover{background:#222;color:#fff}
+  .ratios button.on{background:#fff;color:#000;border-color:#fff}
+
+  /* file drop zone */
+  .upbtn{
+    display:block;
+    border:1px dashed #444;
+    border-radius:6px;
+    padding:15px;
+    text-align:center;
+    cursor:pointer;
+    background:#161616;
+    color:#888;
+    font-size:10px;
+    font-weight:700;
+    text-transform:uppercase;
+    width:100%;
+    margin-top:10px;
+  }
+  .upbtn:hover{color:#fff;border-color:#666}
+
+  /* checkbox rows */
+  .chk{
+    display:flex;
+    align-items:center;
+    font-size:10px;
+    color:#888;
+    text-transform:uppercase;
+    font-weight:700;
+    cursor:pointer;
+    margin-bottom:14px;
+    margin-top:14px;
+    white-space:nowrap;
+  }
+  .chk input{
+    margin-right:8px;
+    cursor:pointer;
+    accent-color:#fff;
+  }
+
+  .note{
+    font-size:10px;
+    color:#888;
+    font-weight:300;
+    line-height:1.7;
+    margin-top:10px;
+  }
+
+  /* footer */
+  #foot{
+    background:#111;
+    border-top:1px solid #222;
+    padding:20px 25px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  #foot button{
+    width:100%;
+    background:#fff;
+    color:#000;
+    border:none;
+    padding:12px;
+    border-radius:6px;
+    cursor:pointer;
+    font-size:11px;
+    font-weight:700;
+    margin-top:0;
+  }
+  #foot button:hover{background:#e0e0e0}
+  #foot button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+  .hide{display:none !important}
+
+  @media (max-width:860px){
+    body{flex-direction:column;padding:12px}
+    #panel{
+      width:100%;
+      flex:0 0 auto;
+      height:auto;
+      max-height:52vh;
+      margin-left:0;
+      margin-top:12px;
+      order:2;
+    }
+    #stage{order:1;height:44vh;padding:12px}
+    #scroll{padding:20px}
+    #foot{padding:16px 20px}
+  }
+
+  </style>
+</head>
+<body>
+  <div id="stage">
+    <canvas id="gl"></canvas>
+    <div id="stagehint"></div>
+  </div>
+
+  <aside id="panel">
+    <div id="ptop">
+      <h1>Surface</h1>
+        </div>
+
+    <div class="modes" id="modes">
+      <button data-mode="2" class="on">Water</button>
+      <button data-mode="1">Glass</button>
+      <button data-mode="3">Fire</button>
+      <button data-mode="4">Haze</button>
+    </div>
+
+    <div id="scroll">
+
+      <details open>
+        <summary>Canvas <span class="chev">›</span></summary>
+        <div class="body">
+          <div class="ratios" id="ratios">
+            <button data-w="800" data-h="1200" class="on">2:3</button>
+            <button data-w="900" data-h="1200">3:4</button>
+            <button data-w="848" data-h="1200">A</button>
+            <button data-w="1100" data-h="1100">1:1</button>
+            <button data-w="1200" data-h="900">4:3</button>
+          </div>
+          <div class="row">
+            <div><div class="lab" style="font-size:10px;color:var(--dim);margin-bottom:7px">Width</div><input type="number" id="docW" value="800" min="200" max="6000" step="10"></div>
+            <div><div class="lab" style="font-size:10px;color:var(--dim);margin-bottom:7px">Height</div><input type="number" id="docH" value="1200" min="200" max="6000" step="10"></div>
+          </div>
+          <div class="ctl" style="margin-top:14px">
+            <div class="lab"><span>Export scale</span></div>
+            <div class="seg" id="escale">
+              <button data-v="2">2x</button>
+              <button data-v="4" class="on">4x</button>
+              <button data-v="6">6x</button>
+            </div>
+          </div>
+        </div>
+      </details>
+      <details open>
+        <summary>Type <span class="chev">›</span></summary>
+        <div class="body">
+          <div class="seg" id="src" style="margin-bottom:13px">
+            <button data-v="text" class="on">Text</button>
+            <button data-v="upload">Uploaded</button>
+          </div>
+
+          <div id="textsrc">
+            <textarea id="text" spellcheck="false">Skin of
+Water</textarea>
+            <div style="margin-top:13px">
+              <select id="align">
+                <option value="left">Left</option>
+                <option value="center" selected>Center</option>
+                <option value="right">Right</option>
+              </select>
+            </div>
+            <label class="upbtn" for="fontfile" id="fontlabel" style="margin-top:9px">Upload font (.ttf .otf .woff)</label>
+            <input type="file" id="fontfile" accept=".ttf,.otf,.woff,.woff2,font/*" class="hide">
+            <div class="ctl" style="margin-top:13px"><div class="lab"><span>Size</span><span class="val" id="sizeV">15</span></div><input type="range" id="size" min="4" max="40" step="0.5" value="15"></div>
+            <div class="ctl"><div class="lab"><span>Weight</span><span class="val" id="weightV">500</span></div><input type="range" id="weight" min="300" max="800" step="100" value="500"></div>
+            <div class="ctl"><div class="lab"><span>Letter spacing</span><span class="val" id="lsV">0.00</span></div><input type="range" id="ls" min="-0.05" max="0.4" step="0.01" value="0"></div>
+            <div class="ctl"><div class="lab"><span>Line height</span><span class="val" id="lhV">1.05</span></div><input type="range" id="lh" min="0.8" max="2.0" step="0.01" value="1.05"></div>
+          </div>
+
+          <div id="upsrc" class="hide">
+            <label class="upbtn" for="file" id="filelabel">Choose SVG file</label>
+            <input type="file" id="file" accept=".svg,image/svg+xml,image/*" class="hide">
+            <label class="chk"><input type="checkbox" id="fitart" checked> Fit canvas to artwork</label>
+            <label class="chk"><input type="checkbox" id="invertsrc"> Invert source (light art on dark)</label>
+          </div>
+        </div>
+      </details>
+      <details>
+        <summary>Color <span class="chev">›</span></summary>
+        <div class="body">
+          <div class="swatch"><label>Background</label><input type="color" id="bg" value="#ffffff"></div>
+          <div class="swatch"><label>Type</label><input type="color" id="ink" value="#000000"></div>
+          <button id="swapCol" class="upbtn" style="border-style:solid">Swap</button>
+        </div>
+      </details>
+
+
+
+      <details open>
+        <summary>Distortion <span class="chev">›</span></summary>
+        <div class="body">
+          <div class="ctl"><div class="lab"><span>Dissolve</span><span class="val" id="dissolveV">0.000</span></div><input type="range" id="dissolve" min="0" max="1" step="0.001" value="0"></div>
+          <div class="ctl"><div class="lab"><span>Type warp</span><span class="val" id="warpV">0.350</span></div><input type="range" id="warp" min="0" max="1" step="0.001" value="0.4183"></div>
+          <div class="ctl"><div class="lab"><span>Motion</span><span class="val" id="speedV">1.00</span></div><input type="range" id="speed" min="0" max="3" step="0.01" value="1"></div>
+        </div>
+      </details>
+
+      <details open>
+        <summary>Animate <span class="chev">›</span></summary>
+        <div class="body">
+          <select id="animTarget">
+            <option value="off" selected>Off</option>
+            <option value="dissolve">Dissolve</option>
+            <option value="warp">Type warp</option>
+          </select>
+          <div class="ctl" style="margin-top:13px"><div class="lab"><span>Duration (s)</span><span class="val" id="animDurV">8.0</span></div><input type="range" id="animDur" min="1" max="30" step="0.5" value="8"></div>
+          <div style="margin-top:6px"><div class="seg" id="animMode">
+            <button data-v="once" class="on">Once</button>
+            <button data-v="loop">Loop</button>
+            <button data-v="pong">Ping pong</button>
+          </div></div>
+          <button id="animBtn" class="upbtn" style="border-style:solid;margin-top:14px;text-transform:uppercase">Start</button>
+        </div>
+      </details>
+
+      
+
+      <details class="mgrp hide" data-for="1">
+        <summary>Glass <span class="chev">›</span></summary>
+        <div class="body">
+          <div class="ctl"><div class="lab"><span>Shards</span><span class="val" id="cellsV">8.0</span></div><input type="range" id="cells" min="2" max="26" step="0.5" value="8"></div>
+          <div class="ctl"><div class="lab"><span>Shatter</span><span class="val" id="shatterV">0.40</span></div><input type="range" id="shatter" min="0" max="2" step="0.01" value="0.4"></div>
+          <div class="ctl"><div class="lab"><span>Crack width</span><span class="val" id="crackV">0.05</span></div><input type="range" id="crack" min="0.005" max="0.2" step="0.005" value="0.05"></div>
+          <label class="chk"><input type="checkbox" id="crackOn" checked> Show cracks</label>
+        </div>
+      </details>
+
+      <details open class="mgrp" data-for="2">
+        <summary>Water <span class="chev">›</span></summary>
+        <div class="body">
+          <div class="ctl"><div class="lab"><span>Wave height</span><span class="val" id="waveAmpV">1.00</span></div><input type="range" id="waveAmp" min="0" max="2" step="0.01" value="1"></div>
+          <div class="ctl"><div class="lab"><span>Frequency</span><span class="val" id="waveFreqV">1.00</span></div><input type="range" id="waveFreq" min="0.3" max="3" step="0.01" value="1"></div>
+          <div class="ctl"><div class="lab"><span>Chop</span><span class="val" id="chopV">0.30</span></div><input type="range" id="chop" min="0" max="1" step="0.01" value="0.3"></div>
+          <div class="ctl"><div class="lab"><span>Wind direction</span><span class="val" id="windAngV">25</span></div><input type="range" id="windAng" min="0" max="360" step="1" value="25"></div>
+          <div class="ctl"><div class="lab"><span>Speed</span><span class="val" id="waterSpeedV">1.0</span></div><input type="range" id="waterSpeed" min="0" max="3" step="0.05" value="1"></div>
+        </div>
+      </details>
+
+      <details class="mgrp hide" data-for="3">
+        <summary>Fire <span class="chev">›</span></summary>
+        <div class="body">
+          <div class="ctl"><div class="lab"><span>Flame scale</span><span class="val" id="fireScaleV">3.5</span></div><input type="range" id="fireScale" min="1" max="10" step="0.1" value="3.5"></div>
+          <div class="ctl"><div class="lab"><span>Wildness</span><span class="val" id="fireWildV">0.60</span></div><input type="range" id="fireWild" min="0" max="1" step="0.01" value="0.6"></div>
+          <div class="ctl"><div class="lab"><span>Turbulence</span><span class="val" id="fireWarpV">1.20</span></div><input type="range" id="fireWarp" min="0" max="3" step="0.01" value="1.2"></div>
+          <div class="ctl"><div class="lab"><span>Rise speed</span><span class="val" id="fireSpeedV">1.0</span></div><input type="range" id="fireSpeed" min="0" max="4" step="0.05" value="1"></div>
+        </div>
+      </details>
+
+      <details class="mgrp hide" data-for="4">
+        <summary>Haze <span class="chev">›</span></summary>
+        <div class="body">
+          <div class="ctl"><div class="lab"><span>Density</span><span class="val" id="fogDensV">0.85</span></div><input type="range" id="fogDens" min="0" max="1" step="0.01" value="0.85"></div>
+          <div class="ctl"><div class="lab"><span>Scale</span><span class="val" id="fogScaleV">2.5</span></div><input type="range" id="fogScale" min="0.5" max="8" step="0.1" value="2.5"></div>
+          <div class="ctl"><div class="lab"><span>Vagueness</span><span class="val" id="fogSoftV">0.80</span></div><input type="range" id="fogSoft" min="0.05" max="1" step="0.01" value="0.8"></div>
+          <div class="ctl"><div class="lab"><span>Drift</span><span class="val" id="fogDriftV">1.0</span></div><input type="range" id="fogDrift" min="0" max="4" step="0.05" value="1"></div>
+        </div>
+      </details>
+
+
+
+    </div>
+
+    <div id="foot">
+      <button id="play" class="primary">Pause</button>
+      <button id="exportPng">PNG</button>
+    </div>
+  </aside>
+
+<script>
+const cv = document.getElementById('gl');
+const gl = cv.getContext('webgl', {preserveDrawingBuffer:true, alpha:false, antialias:false});
+if(!gl){ document.getElementById('stagehint').textContent = 'webgl not available in this browser'; }
+
+const VERT = `attribute vec2 a; void main(){ gl_Position = vec4(a,0.0,1.0); }`;
+
+const FRAG = `
+precision highp float;
+uniform vec2 uRes;
+uniform float uTime, uMode, uOutput;
+uniform sampler2D uType;
+uniform vec3 uBg, uInk;
+uniform float uRelief, uContrast, uGrainScale, uGrainAmt, uGrainStr, uInvert;
+uniform float uWarp, uDissolve;
+uniform float uCells, uShatter, uCrack, uCrackOn;
+uniform float uWaveAmp, uWaveFreq, uChop, uWindAng, uWaterSpeed;
+uniform float uFireScale, uFireWild, uFireWarp, uFireSpeed;
+uniform float uFogDens, uFogScale, uFogSoft, uFogDrift;
+
+vec3 permute(vec3 x){ return mod(((x*34.0)+1.0)*x, 289.0); }
+float snoise(vec2 v){
+  const vec4 C = vec4(0.211324865405187,0.366025403784439,-0.577350269189626,0.024390243902439);
+  vec2 i=floor(v+dot(v,C.yy)); vec2 x0=v-i+dot(i,C.xx);
+  vec2 i1=(x0.x>x0.y)?vec2(1.0,0.0):vec2(0.0,1.0);
+  vec4 x12=x0.xyxy+C.xxzz; x12.xy-=i1; i=mod(i,289.0);
+  vec3 p=permute(permute(i.y+vec3(0.0,i1.y,1.0))+i.x+vec3(0.0,i1.x,1.0));
+  vec3 m=max(0.5-vec3(dot(x0,x0),dot(x12.xy,x12.xy),dot(x12.zw,x12.zw)),0.0);
+  m=m*m; m=m*m;
+  vec3 x=2.0*fract(p*C.www)-1.0; vec3 h=abs(x)-0.5; vec3 ox=floor(x+0.5); vec3 a0=x-ox;
+  m*=1.79284291400159-0.85373472095314*(a0*a0+h*h);
+  vec3 g; g.x=a0.x*x0.x+h.x*x0.y; g.yz=a0.yz*x12.xz+h.yz*x12.yw;
+  return 130.0*dot(m,g);
+}
+float fbm(vec2 p){ float v=0.0,a=0.5; for(int i=0;i<5;i++){ v+=a*snoise(p); p*=2.0; a*=0.5; } return v*0.5+0.5; }
+vec2 hash2(vec2 p){ p=vec2(dot(p,vec2(127.1,311.7)),dot(p,vec2(269.5,183.3))); return fract(sin(p)*43758.5453123); }
+
+float fieldFor(vec2 p, int mode){
+  float t=uTime;
+  if(mode==2){
+    float a=radians(uWindAng);
+    vec2 d1=vec2(cos(a),sin(a)), d2=vec2(cos(a+0.6),sin(a+0.6));
+    float h=0.0;
+    h+=sin(dot(p,d1)*16.0*uWaveFreq + t*1.2*uWaterSpeed)*0.6;
+    h+=sin(dot(p,d2)*27.0*uWaveFreq + t*1.7*uWaterSpeed)*0.3;
+    h+=uChop*(fbm(p*6.0*uWaveFreq + t*0.3*uWaterSpeed)-0.5);
+    return h*uWaveAmp;
+  }
+  if(mode==3){
+    vec2 q=p*uFireScale; q+=vec2(0.0,-t*uFireSpeed*0.15);
+    vec2 w=q+uFireWarp*vec2(fbm(q+t*0.12), fbm(q+5.2-t*0.10));
+    float f=fbm(w*1.4); f=pow(1.0-abs(2.0*f-1.0), mix(1.0,3.0,uFireWild));
+    float f2=fbm(w*2.7+3.0); f2=1.0-abs(2.0*f2-1.0);
+    f=mix(f, f*f2, uFireWild*0.6);
+    return clamp(f*1.35,0.0,1.0);
+  }
+  if(mode==4){
+    vec2 q=p*uFogScale; q+=t*uFogDrift*0.05*vec2(0.8,0.3);
+    vec2 w=q+1.4*vec2(fbm(q+t*0.04), fbm(q+3.3-t*0.05));
+    float d=fbm(w*1.2); d=smoothstep(0.5-uFogSoft*0.5,0.5+uFogSoft*0.5,d);
+    return d*uFogDens;
+  }
+  return 0.0;
+}
+
+void main(){
+  vec2 uv=gl_FragCoord.xy/uRes;
+  float aspect=uRes.x/uRes.y;
+  vec2 p=vec2(uv.x*aspect, uv.y);
+  int mode=int(uMode+0.5);
+  vec2 dispType=vec2(0.0);
+  float surf=0.0, reveal=1.0, hi=0.0, gCrack=0.0;
+
+  if(mode==1){
+    vec2 gx=p*uCells; vec2 n=floor(gx); vec2 fp=fract(gx);
+    vec2 mg, mr; float md=8.0;
+    for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++){
+      vec2 g=vec2(float(i),float(j)); vec2 o=hash2(n+g); vec2 r=g+o-fp; float d=dot(r,r);
+      if(d<md){ md=d; mr=r; mg=g; }
+    }
+    float ed=8.0;
+    for(int j=-2;j<=2;j++) for(int i=-2;i<=2;i++){
+      vec2 g=mg+vec2(float(i),float(j)); vec2 o=hash2(n+g); vec2 r=g+o-fp; vec2 diff=mr-r;
+      if(dot(diff,diff)>0.0001){ ed=min(ed, dot(0.5*(mr+r), normalize(r-mr))); }
+    }
+    vec2 cid=n+mg; vec2 off=(hash2(cid)-0.5);
+    dispType=off*uShatter*0.05*(1.0+uDissolve*2.5);
+    float crack=1.0-smoothstep(0.0,uCrack,ed);
+    gCrack=crack;
+    float facet=(hash2(cid+1.7).x-0.5);
+    surf=crack*0.85+max(facet,0.0)*0.4;
+  } else {
+    float e=0.0016;
+    float f0=fieldFor(p,mode);
+    float fx=fieldFor(p+vec2(e,0.0),mode);
+    float fy=fieldFor(p+vec2(0.0,e),mode);
+    vec2 grad=vec2(fx-f0,fy-f0)/e;
+    dispType=grad*uWarp*0.012*(1.0+uDissolve*2.5);
+    surf=clamp(f0,0.0,1.0);
+    if(mode==2){ hi=clamp(grad.y*0.4+0.5,0.0,1.0); surf=clamp(0.5+f0*0.5,0.0,1.0)*0.55; }
+    if(mode==3){ reveal=1.0-smoothstep(0.35,1.0,f0)*uDissolve; }
+    if(mode==4){ surf*=0.7; reveal=mix(1.0, smoothstep(0.2,0.7,f0), 0.4); }
+  }
+
+  vec2 tuv=uv+dispType;
+  float tcov=texture2D(uType, tuv).a;
+  float pres=smoothstep(0.45,0.55,reveal);
+  float alpha=clamp(tcov*pres,0.0,1.0);
+
+  if(uOutput>0.5){ gl_FragColor=vec4(surf, alpha, 0.0, 1.0); return; }
+
+  vec3 paper=uBg;
+  vec3 col=paper-surf*uRelief;
+  col+=hi*0.05;
+  col=mix(col, uInk, alpha);
+  col=mix(col, uInk, gCrack*0.85*uCrackOn);
+
+  vec2 gc=floor(gl_FragCoord.xy/max(uGrainScale,1.0));
+  float bn=hash2(gc).x;
+  float dens=surf*uGrainAmt+alpha*0.15;
+  float dotMask=step(bn,dens);
+  col-=dotMask*uGrainStr;
+
+  col=(col-0.5)*uContrast+0.5;
+  if(uInvert>0.5) col=1.0-col;
+  gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
+}`;
+
+function compile(type, src){
+  const s=gl.createShader(type); gl.shaderSource(s,src); gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(s));
+  return s;
+}
+const prog=gl.createProgram();
+gl.attachShader(prog, compile(gl.VERTEX_SHADER,VERT));
+gl.attachShader(prog, compile(gl.FRAGMENT_SHADER,FRAG));
+gl.linkProgram(prog); gl.useProgram(prog);
+const buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+const aLoc=gl.getAttribLocation(prog,'a');
+gl.enableVertexAttribArray(aLoc); gl.vertexAttribPointer(aLoc,2,gl.FLOAT,false,0,0);
+
+const U={};
+['uRes','uTime','uMode','uOutput','uType','uBg','uInk','uRelief','uContrast','uGrainScale','uGrainAmt','uGrainStr','uInvert','uWarp','uDissolve','uCells','uShatter','uCrack','uCrackOn','uWaveAmp','uWaveFreq','uChop','uWindAng','uWaterSpeed','uFireScale','uFireWild','uFireWarp','uFireSpeed','uFogDens','uFogScale','uFogSoft','uFogDrift'].forEach(n=>U[n]=gl.getUniformLocation(prog,n));
+
+const typeCanvas=document.createElement('canvas');
+const tctx=typeCanvas.getContext('2d',{willReadFrequently:true});
+const typeTex=gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D,typeTex);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,true);
+gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
+
+const S={
+  mode:2,time:0,playing:true,speed:1,output:0,
+  useUpload:false, invertSrc:false, fitArt:true,
+  text:'Skin of\nWater',
+  font:"'EB Garamond',Georgia,serif", align:'center',
+  size:15,weight:500,ls:0,lh:1.05,
+  docW:800,docH:1200,exportScale:4,
+  dissolve:0.0,warp:0.35,dEff:0.0,wEff:0.35,
+  animTarget:'off',animDur:8,animMode:'once',animOn:false,animStart:0,
+  cells:8,shatter:0.4,crack:0.05,crackOn:true,
+  waveAmp:1,waveFreq:1,chop:0.3,windAng:25,waterSpeed:1,
+  fireScale:3.5,fireWild:0.6,fireWarp:1.2,fireSpeed:1,
+  fogDens:0.85,fogScale:2.5,fogSoft:0.8,fogDrift:1,
+  bg:[1.0,1.0,1.0], ink:[0.0,0.0,0.0],
+  relief:0.0,grainAmt:0.0,grainStr:0.0,grainScale:1.0,contrast:1.0,invert:0,
+};
+let uploadedImg=null;
+
+let W=800,H=1000,DPR=1;
+function fit(){
+  DPR=Math.min(window.devicePixelRatio||1,2);
+  const stage=document.getElementById('stage');
+  const pad=28;
+  const availW=stage.clientWidth-pad, availH=stage.clientHeight-pad;
+  const ar=S.docW/S.docH;
+  let w=availW, h=w/ar;
+  if(h>availH){ h=availH; w=h*ar; }
+  cv.style.width=w+'px'; cv.style.height=h+'px';
+  W=Math.round(w*DPR); H=Math.round(h*DPR);
+  cv.width=W; cv.height=H; gl.viewport(0,0,W,H);
+  renderType();
+}
+
+function renderType(){
+  typeCanvas.width=W; typeCanvas.height=H;
+  tctx.clearRect(0,0,W,H);
+  if(S.useUpload && uploadedImg){
+    const iw=uploadedImg.naturalWidth||uploadedImg.width||W;
+    const ih=uploadedImg.naturalHeight||uploadedImg.height||H;
+    const ar=iw/ih, car=W/H, margin=0.92;
+    let dw,dh;
+    if(ar>car){ dw=W*margin; dh=dw/ar; } else { dh=H*margin; dw=dh*ar; }
+    tctx.drawImage(uploadedImg,(W-dw)/2,(H-dh)/2,dw,dh);
+    const id=tctx.getImageData(0,0,W,H), d=id.data;
+    for(let i=0;i<d.length;i+=4){
+      const a=d[i+3]/255;
+      const lum=(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2])/255;
+      let ink=S.invertSrc ? a*lum : a*(1.0-lum);
+      d[i]=255; d[i+1]=255; d[i+2]=255; d[i+3]=Math.round(ink*255);
+    }
+    tctx.putImageData(id,0,0);
+  } else {
+    tctx.fillStyle='#fff'; tctx.textBaseline='middle'; tctx.textAlign=S.align;
+    const fontPx=(S.size/100)*H;
+    tctx.font=`${S.weight} ${fontPx}px ${S.font}`;
+    if('letterSpacing' in tctx) tctx.letterSpacing=(S.ls*fontPx)+'px';
+    const lines=S.text.split('\n'); const lineH=fontPx*S.lh; const total=lineH*(lines.length-1);
+    let x=W*0.5; if(S.align==='left') x=W*0.08; if(S.align==='right') x=W*0.92;
+    let y=H*0.5-total*0.5;
+    for(const ln of lines){ tctx.fillText(ln,x,y); y+=lineH; }
+  }
+  gl.bindTexture(gl.TEXTURE_2D,typeTex);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,typeCanvas);
+}
+
+function setUniforms(){
+  gl.uniform2f(U.uRes,W,H);
+  gl.uniform1f(U.uTime,S.time);
+  gl.uniform1f(U.uMode,S.mode);
+  gl.uniform1f(U.uOutput,S.output);
+  gl.uniform1i(U.uType,0);
+  gl.uniform3fv(U.uBg,S.bg);
+  gl.uniform3fv(U.uInk,S.ink);
+  gl.uniform1f(U.uRelief,S.relief);
+  gl.uniform1f(U.uContrast,S.contrast);
+  gl.uniform1f(U.uGrainScale,S.grainScale*H/900);
+  gl.uniform1f(U.uGrainAmt,S.grainAmt);
+  gl.uniform1f(U.uGrainStr,S.grainStr);
+  gl.uniform1f(U.uInvert,S.invert);
+  gl.uniform1f(U.uWarp,S.wEff);
+  gl.uniform1f(U.uDissolve,S.dEff);
+  gl.uniform1f(U.uCells,S.cells);
+  gl.uniform1f(U.uShatter,S.shatter);
+  gl.uniform1f(U.uCrack,S.crack);
+  gl.uniform1f(U.uCrackOn,S.crackOn?1.0:0.0);
+  gl.uniform1f(U.uWaveAmp,S.waveAmp);
+  gl.uniform1f(U.uWaveFreq,S.waveFreq);
+  gl.uniform1f(U.uChop,S.chop);
+  gl.uniform1f(U.uWindAng,S.windAng);
+  gl.uniform1f(U.uWaterSpeed,S.waterSpeed);
+  gl.uniform1f(U.uFireScale,S.fireScale);
+  gl.uniform1f(U.uFireWild,S.fireWild);
+  gl.uniform1f(U.uFireWarp,S.fireWarp);
+  gl.uniform1f(U.uFireSpeed,S.fireSpeed);
+  gl.uniform1f(U.uFogDens,S.fogDens);
+  gl.uniform1f(U.uFogScale,S.fogScale);
+  gl.uniform1f(U.uFogSoft,S.fogSoft);
+  gl.uniform1f(U.uFogDrift,S.fogDrift);
+}
+
+let last=performance.now();
+function frame(now){
+  const dt=Math.min((now-last)/1000,0.05); last=now;
+  S.dEff=S.dissolve; S.wEff=S.warp;
+  if(S.animOn && S.animTarget!=='off'){
+    const el=(now-S.animStart)/1000/Math.max(S.animDur,0.1);
+    let ph;
+    if(S.animMode==='once') ph=Math.min(Math.max(el,0),1);
+    else if(S.animMode==='loop') ph=el-Math.floor(el);
+    else { const mm=el%2; ph=mm<1?mm:2-mm; }
+    const phE=ph*ph*(3.0-2.0*ph);
+    if(S.animTarget==='dissolve') S.dEff=S.dissolve*phE;
+    else if(S.animTarget==='warp') S.wEff=S.warp*phE;
+  }
+  if(S.playing) S.time+=dt*S.speed;
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,typeTex);
+  S.output=0; setUniforms();
+  gl.drawArrays(gl.TRIANGLES,0,3);
+  requestAnimationFrame(frame);
+}
+
+function hexToRgb(hex){ const n=parseInt(hex.slice(1),16); return [((n>>16)&255)/255,((n>>8)&255)/255,(n&255)/255]; }
+function rgbToHex(a){ const c=v=>('0'+Math.round(v*255).toString(16)).slice(-2); return '#'+c(a[0])+c(a[1])+c(a[2]); }
+
+function bind(id,key,dp){
+  const el=document.getElementById(id), v=document.getElementById(id+'V');
+  const fmt=x=>dp===undefined?x:(+x).toFixed(dp);
+  if(v) v.textContent=fmt(el.value);
+  el.addEventListener('input',()=>{ S[key]=parseFloat(el.value); if(v) v.textContent=fmt(el.value); });
+}
+function bindCurve(id,key,max,gamma,dp){
+  const el=document.getElementById(id), v=document.getElementById(id+'V');
+  const calc=raw=>max*Math.pow(raw,gamma);
+  const upd=()=>{ S[key]=calc(parseFloat(el.value)); if(v) v.textContent=S[key].toFixed(dp); };
+  upd();
+  el.addEventListener('input',upd);
+}
+bindCurve('dissolve','dissolve',1,2,3); bindCurve('warp','warp',2,2,3); bind('speed','speed',2);
+bind('animDur','animDur',1);
+bind('size','size',0); bind('weight','weight',0); bind('ls','ls',2); bind('lh','lh',2);
+bind('cells','cells',1); bind('shatter','shatter',2); bind('crack','crack',3);
+document.getElementById('crackOn').addEventListener('change',e=>{ S.crackOn=e.target.checked; });
+bind('waveAmp','waveAmp',2); bind('waveFreq','waveFreq',2); bind('chop','chop',2); bind('windAng','windAng',0); bind('waterSpeed','waterSpeed',1);
+bind('fireScale','fireScale',1); bind('fireWild','fireWild',2); bind('fireWarp','fireWarp',2); bind('fireSpeed','fireSpeed',1);
+bind('fogDens','fogDens',2); bind('fogScale','fogScale',1); bind('fogSoft','fogSoft',2); bind('fogDrift','fogDrift',1);
+
+['size','weight','ls','lh'].forEach(id=>document.getElementById(id).addEventListener('input',renderType));
+document.getElementById('text').addEventListener('input',e=>{ S.text=e.target.value; renderType(); });
+document.getElementById('align').addEventListener('change',e=>{ S.align=e.target.value; renderType(); });
+
+document.getElementById('bg').addEventListener('input',e=>{ S.bg=hexToRgb(e.target.value); });
+document.getElementById('ink').addEventListener('input',e=>{ S.ink=hexToRgb(e.target.value); });
+document.getElementById('swapCol').addEventListener('click',()=>{
+  const b=S.bg, k=S.ink;
+  S.bg=k; S.ink=b;
+  document.getElementById('bg').value=rgbToHex(S.bg);
+  document.getElementById('ink').value=rgbToHex(S.ink);
+});
+
+let fontSeq=0;
+document.getElementById('fontfile').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const label=document.getElementById('fontlabel');
+  label.textContent='Loading '+f.name;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const fam='UserFont_'+(++fontSeq);
+    const ff=new FontFace(fam, ev.target.result);
+    ff.load().then(loaded=>{
+      document.fonts.add(loaded);
+      S.font=fam;
+      label.textContent=f.name;
+      renderType();
+    }).catch(()=>{ label.textContent='Could not read that font file'; });
+  };
+  reader.readAsArrayBuffer(f);
+});
+
+document.getElementById('animTarget').addEventListener('change',e=>{ S.animTarget=e.target.value; });
+document.querySelectorAll('#animMode button').forEach(b=>{
+  b.addEventListener('click',()=>{ document.querySelectorAll('#animMode button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); S.animMode=b.dataset.v; });
+});
+const animBtn=document.getElementById('animBtn');
+animBtn.addEventListener('click',()=>{
+  if(S.animTarget==='off'){ animBtn.textContent='Pick a target'; setTimeout(()=>{ if(!S.animOn) animBtn.textContent='Start'; },1200); return; }
+  S.animOn=!S.animOn;
+  if(S.animOn){ S.animStart=performance.now(); animBtn.textContent='Stop'; }
+  else { animBtn.textContent='Start'; }
+});
+
+// source toggle
+document.querySelectorAll('#src button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#src button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+    S.useUpload = b.dataset.v==='upload';
+    document.getElementById('textsrc').classList.toggle('hide', S.useUpload);
+    document.getElementById('upsrc').classList.toggle('hide', !S.useUpload);
+    renderType();
+  });
+});
+document.getElementById('invertsrc').addEventListener('change',e=>{ S.invertSrc=e.target.checked; renderType(); });
+document.getElementById('fitart').addEventListener('change',e=>{ S.fitArt=e.target.checked; });
+
+// file upload
+document.getElementById('file').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  document.getElementById('filelabel').textContent=f.name;
+  const reader=new FileReader();
+  const isSvg=/svg/i.test(f.type)||/\.svg$/i.test(f.name);
+  reader.onload=ev=>{
+    let url, aspect=null;
+    if(isSvg){
+      let txt=ev.target.result;
+      const vb=txt.match(/viewBox\s*=\s*["']([^"']+)["']/i);
+      if(vb){ const n=vb[1].trim().split(/[\s,]+/).map(Number); if(n.length===4 && n[3]>0) aspect=n[2]/n[3]; }
+      if(!/\bwidth\s*=/.test(txt) || !/\bheight\s*=/.test(txt)){
+        if(vb){ const n=vb[1].trim().split(/[\s,]+/).map(Number);
+          txt=txt.replace(/<svg/i,`<svg width="${n[2]}" height="${n[3]}"`); }
+      }
+      const blob=new Blob([txt],{type:'image/svg+xml'}); url=URL.createObjectURL(blob);
+    } else { url=ev.target.result; }
+    const img=new Image();
+    img.onload=()=>{
+      uploadedImg=img; S.useUpload=true;
+      document.querySelectorAll('#src button').forEach(x=>x.classList.toggle('on', x.dataset.v==='upload'));
+      document.getElementById('textsrc').classList.add('hide');
+      document.getElementById('upsrc').classList.remove('hide');
+      if(S.fitArt){
+        const a = aspect || (img.naturalWidth/img.naturalHeight) || (S.docW/S.docH);
+        const long=1200; if(a>=1){ S.docW=Math.round(long); S.docH=Math.round(long/a); }
+        else { S.docH=Math.round(long); S.docW=Math.round(long*a); }
+        document.getElementById('docW').value=S.docW; document.getElementById('docH').value=S.docH;
+        document.querySelectorAll('#ratios button').forEach(x=>x.classList.remove('on'));
+        fit();
+      } else { renderType(); }
+    };
+    img.src=url;
+  };
+  if(isSvg) reader.readAsText(f); else reader.readAsDataURL(f);
+});
+
+// canvas size
+function applyDoc(){ document.getElementById('docW').value=S.docW; document.getElementById('docH').value=S.docH; fit(); }
+document.querySelectorAll('#ratios button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#ratios button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+    S.docW=parseInt(b.dataset.w); S.docH=parseInt(b.dataset.h); applyDoc();
+  });
+});
+document.getElementById('docW').addEventListener('change',e=>{ S.docW=Math.max(100,parseInt(e.target.value)||S.docW); document.querySelectorAll('#ratios button').forEach(x=>x.classList.remove('on')); fit(); });
+document.getElementById('docH').addEventListener('change',e=>{ S.docH=Math.max(100,parseInt(e.target.value)||S.docH); document.querySelectorAll('#ratios button').forEach(x=>x.classList.remove('on')); fit(); });
+document.getElementById('docW').addEventListener('input',e=>{ const v=parseInt(e.target.value); if(v>=100){ S.docW=v; document.querySelectorAll('#ratios button').forEach(x=>x.classList.remove('on')); fit(); } });
+document.getElementById('docH').addEventListener('input',e=>{ const v=parseInt(e.target.value); if(v>=100){ S.docH=v; document.querySelectorAll('#ratios button').forEach(x=>x.classList.remove('on')); fit(); } });
+document.querySelectorAll('#escale button').forEach(b=>{
+  b.addEventListener('click',()=>{ document.querySelectorAll('#escale button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); S.exportScale=parseInt(b.dataset.v); });
+});
+
+document.querySelectorAll('#modes button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('#modes button').forEach(x=>x.classList.remove('on')); b.classList.add('on');
+    S.mode=parseInt(b.dataset.mode);
+    document.querySelectorAll('.mgrp').forEach(g=>{ const on=parseInt(g.dataset.for)===S.mode; g.classList.toggle('hide',!on); if(on) g.open=true; });
+  });
+});
+const playBtn=document.getElementById('play');
+playBtn.addEventListener('click',()=>{ S.playing=!S.playing; playBtn.textContent=S.playing?'Pause':'Play'; });
+
+
+document.getElementById('exportPng').addEventListener('click',()=>{
+  const scale=S.exportScale;
+  let ew=Math.round(S.docW*scale), eh=Math.round(S.docH*scale);
+  const MAXA=16777216, MAXDIM=8192;
+  if(ew*eh>MAXA){ const s=Math.sqrt(MAXA/(ew*eh)); ew=Math.floor(ew*s); eh=Math.floor(eh*s); }
+  if(ew>MAXDIM){ eh=Math.round(eh*MAXDIM/ew); ew=MAXDIM; }
+  if(eh>MAXDIM){ ew=Math.round(ew*MAXDIM/eh); eh=MAXDIM; }
+  const sw=W,sh=H,cw=cv.width,ch=cv.height;
+  cv.width=ew; cv.height=eh;
+  W=gl.drawingBufferWidth||ew; H=gl.drawingBufferHeight||eh;
+  gl.viewport(0,0,W,H);
+  renderType(); S.output=0; setUniforms(); gl.drawArrays(gl.TRIANGLES,0,3);
+  cv.toBlob(b=>{
+    const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download='surface.png'; a.click(); URL.revokeObjectURL(a.href);
+    W=sw;H=sh;cv.width=cw;cv.height=ch;gl.viewport(0,0,W,H);renderType();
+  },'image/png');
+});
+
+window.addEventListener('resize',fit);
+document.fonts.ready.then(()=>{ fit(); });
+fit();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
